@@ -18,6 +18,7 @@ namespace Barebones.Asset
 
         private static long _cacheSize = 0L;
 
+        private static Mutex _mutex = new Mutex();
 
         /// <summary>
         /// Find a script of the given type and path, loading it if we do not have it cached.
@@ -29,6 +30,8 @@ namespace Barebones.Asset
         {
             try
             {
+                // We don't want multiple threads trying to access any of this at the same time.
+                _mutex.WaitOne();
                 // Try to get the script paired to the provided key...
                 if (_scriptCache.TryGetValue(scriptPath, out var value))
                 {
@@ -46,6 +49,7 @@ namespace Barebones.Asset
                 }
                 else // Otherwise, we don't have the script cached, so load it, cache it, return it.
                 {
+
                     var script = LoadScript<T>(scriptPath);
                     UpdateCachedScriptList(scriptPath);
                     _scriptCache.Add(scriptPath, script);
@@ -58,6 +62,10 @@ namespace Barebones.Asset
                 Verbose.WriteErrorMajor($"SCRIPT: Failed to find {typeof(T).Name} , {scriptPath} \n EX: {ex.Message}");
                 return null;
             }
+            finally
+            {
+                _mutex.ReleaseMutex();
+            }
             
         }
 
@@ -69,7 +77,7 @@ namespace Barebones.Asset
         /// <returns>A script of the specified type.</returns>
         private static T LoadScript<T>(string scriptPath) where T : Script
         {
-            StreamReader reader = null;
+            StreamReader? reader = null;
             try 
             {
                 // Get the path, read that file, json parse it, return it.

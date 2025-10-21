@@ -104,6 +104,7 @@ namespace Barebones.Asset
             // The size of the asset loaded.
             private long _fileSize;
 
+
             /// <summary>
             /// The Texture2D stored in this TextureMap.
             /// </summary>
@@ -133,7 +134,6 @@ namespace Barebones.Asset
             /// Constructs a new TextureMap from the specified arguments.
             /// </summary>
             /// <param name="texturePath">The path to the texture to load.</param>
-            /// <param name="permanent">Is this TextureMap permanent?</param>
             public TextureMap(string texturePath)
             {
                 try // Attempt to load the specified texture
@@ -169,24 +169,30 @@ namespace Barebones.Asset
         private static Dictionary<string, TextureMap> _textureCache = new Dictionary<string, TextureMap>();
         private static List<string> _sortedCache = new List<string>();
         private static long _cacheSize = 0L;
+        private static Mutex _mutex = new Mutex();
 
         /// <summary>
         /// Ask the handler to return a Texture2D with a given name. If we don't have it, try to load it.
         /// </summary>
-        /// <param name="textureName">The name of the texture to get.</param>
+        /// <param name="texturePath">The name of the texture to get.</param>
         /// <returns>A Texture2D.</returns>
-        public static Texture2D GetTexture(string textureName)
+        public static Texture2D GetTexture(string texturePath)
         {
             try // Try to get the texture from the dictionary
             {
-                TextureMap tex = _textureDict[textureName];
+                _mutex.WaitOne();
+                TextureMap tex = _textureDict[texturePath];
                 tex.Count++;
                 return tex.Texture;
             }
             catch // If we can't, load it instead and return that.
             {
-                LoadTexture(textureName);
-                return _textureDict[textureName].Texture;
+                LoadTexture(texturePath);
+                return _textureDict[texturePath].Texture;
+            }
+            finally
+            {
+                _mutex.ReleaseMutex();
             }
 
         }
@@ -194,19 +200,18 @@ namespace Barebones.Asset
         /// <summary>
         /// Loads a texture into our texture dictionary.
         /// </summary>
-        /// <param name="textureName">The name of the texture to load.</param>
-        /// <param name="permanent">Should this texture be permanently loaded? Should be false most of the time.</param>
-        public static void LoadTexture(string textureName)
+        /// <param name="texturePath">The name of the texture to load.</param>
+        private static void LoadTexture(string texturePath)
         {
             // Create sprite definition
             try
             {
-                GetTextureFromCache(textureName);
+                GetTextureFromCache(texturePath);
             }
             catch
             {
-                TextureMap newTex = new TextureMap("get path from sprite");
-                _textureDict.Add(textureName, newTex);
+                TextureMap newTex = new TextureMap(texturePath);
+                _textureDict.Add(texturePath, newTex);
             }
         }
 
@@ -214,22 +219,27 @@ namespace Barebones.Asset
         /// Let the handler know that an object is no longer using a given texture.
         /// If no other objects are using the texture, dispose of it.
         /// </summary>
-        /// <param name="textureName">The name of the texture to unload.</param>
-        public static void UnloadTexture(string textureName)
+        /// <param name="texturePath">The name of the texture to unload.</param>
+        public static void UnloadTexture(string texturePath)
         {
             try // Try to unload the texture
             {
-                TextureMap tex = _textureDict[textureName];
+                _mutex.WaitOne();
+                TextureMap tex = _textureDict[texturePath];
                 tex.Count--;
                 if (tex.Count <= 0)
                 {
-                    AddTextureToCache(textureName, tex);
+                    AddTextureToCache(texturePath, tex);
                 }
                 return;
             }
             catch (Exception ex) // If something goes wrong, which it could, spit out a minor error.
             {
-                Verbose.WriteErrorMinor($"TEXTURE: Error unloading texture: {textureName}\n Doing nothing about this? EX: {ex.Message}");
+                Verbose.WriteErrorMinor($"TEXTURE: Error unloading texture: {texturePath}\n Doing nothing about this? EX: {ex.Message}");
+            }
+            finally
+            {
+                _mutex.ReleaseMutex();
             }
         }
 
@@ -237,13 +247,13 @@ namespace Barebones.Asset
         /// Removes the specified texture from the active dictionary and adds it to the cache.
         /// Then trims the cache.
         /// </summary>
-        /// <param name="textureName">The name of the texture, for the dictionary.</param>
+        /// <param name="texturePath">The name of the texture, for the dictionary.</param>
         /// <param name="tex">The TextureMap from the dictionary.</param>
-        private static void AddTextureToCache(string textureName, TextureMap tex)
+        private static void AddTextureToCache(string texturePath, TextureMap tex)
         {
-            _textureDict.Remove(textureName);
-            _textureCache.Add(textureName,tex);
-            _sortedCache.Add(textureName);
+            _textureDict.Remove(texturePath);
+            _textureCache.Add(texturePath,tex);
+            _sortedCache.Add(texturePath);
             _cacheSize += tex.FileSize;
             TrimTextureCache();
         }
@@ -251,15 +261,15 @@ namespace Barebones.Asset
         /// <summary>
         /// Retrieves the specified texture from the cache.
         /// </summary>
-        /// <param name="textureName">The name of the texture to get.</param>
-        private static void GetTextureFromCache(string textureName)
+        /// <param name="texturePath">The name of the texture to get.</param>
+        private static void GetTextureFromCache(string texturePath)
         {
-            TextureMap tex = _textureCache[textureName];
-            _textureCache.Remove(textureName);
-            _sortedCache.Remove(textureName);
+            TextureMap tex = _textureCache[texturePath];
+            _textureCache.Remove(texturePath);
+            _sortedCache.Remove(texturePath);
             _cacheSize -= tex.FileSize;
             tex.Count++;
-            _textureDict.Add(textureName, tex);
+            _textureDict.Add(texturePath, tex);
         }
 
         /// <summary>
@@ -269,11 +279,11 @@ namespace Barebones.Asset
         {
             while (_cacheSize > Engine.TextureCacheMaxSize)
             {
-                string nameRemove = _sortedCache[0];
-                TextureMap tex = _textureCache[nameRemove];
+                string pathRemove = _sortedCache[0];
+                TextureMap tex = _textureCache[pathRemove];
                 _cacheSize -= tex.FileSize;
                 tex.Unload();
-                _textureCache.Remove(nameRemove);
+                _textureCache.Remove(pathRemove);
                 _sortedCache.RemoveAt(0);
             }
         }

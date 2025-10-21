@@ -2,6 +2,9 @@
 
 namespace Barebones
 {
+    /// <summary>
+    /// The system for writing messages to the console with varying levels of verbosity.
+    /// </summary>
     public static class Verbose
     {
         private static bool _showErrorMajor = false;
@@ -72,7 +75,7 @@ namespace Barebones
             if (_showErrorMajor)
             {
                 _mut.WaitOne();
-                string time = $"{DateTime.Now:HH:mm:ss:ff}";
+                string time = GetTimestamp();
                 string output = $" !!MAJOR ERROR!!: {message}";
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.Write(time);
@@ -93,7 +96,7 @@ namespace Barebones
             if (_showErrorMinor)
             {
                 _mut.WaitOne();
-                string time = $"{DateTime.Now:HH:mm:ss:ff}";
+                string time = GetTimestamp();
                 string output = $" !MINOR ERROR!: {message}";
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.Write(time);
@@ -114,7 +117,7 @@ namespace Barebones
             if (_showLogMajor)
             {
                 _mut.WaitOne();
-                string time = $"{DateTime.Now:HH:mm:ss:ff}";
+                string time = GetTimestamp();
                 string output = $" MAJOR Log: {message}";
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.Write(time);
@@ -135,7 +138,7 @@ namespace Barebones
             if (_showLogMinor)
             {
                 _mut.WaitOne();
-                string time = $"{DateTime.Now:HH:mm:ss:ff}";
+                string time = GetTimestamp();
                 string output = $" MINOR Log: {message}";
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.Write(time);
@@ -145,6 +148,11 @@ namespace Barebones
                 _fileOutput?.WriteLine(output);
                 _mut.ReleaseMutex();
             }
+        }
+
+        private static string GetTimestamp()
+        {
+            return $"{DateTime.Now:HH:mm:ss:fff}";
         }
     }
 }

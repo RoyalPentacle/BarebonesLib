@@ -31,7 +31,7 @@ namespace Barebones.Asset
                 int sampleRate = 44100; // The samplerate of the fallback sound.
                 float frequency = 110f; // The frequency of the fallback sound, 110 = A2
                 float duration = 0.25f; // The duration in seconds of the fallback sound.
-                short amplitude = short.MaxValue / 80; // The volume of the fallback sound. Note that this will 
+                short amplitude = short.MaxValue / 80; // The volume of the fallback sound.
                 float dutyCycle = 0.25f; // The duty cycle of the square wave.
 
 
@@ -125,7 +125,7 @@ namespace Barebones.Asset
         private static Dictionary<string, SoundMap> _soundCache = new Dictionary<string, SoundMap>();
         private static List<string> _sortedCache = new List<string>();
         private static long _cacheSize = 0L;
-
+        private static Mutex _mutex = new Mutex();
         /// <summary>
         /// Ask the handler to return a SoundEffect with a given name. If we don't have it, try to load it.
         /// </summary>
@@ -135,6 +135,7 @@ namespace Barebones.Asset
         {
             try // Try to get the sound from the dictionary
             {
+                _mutex.WaitOne();
                 SoundMap sound = _soundDict[soundName];
                 sound.Count++;
                 return sound.Sound;
@@ -144,13 +145,17 @@ namespace Barebones.Asset
                 LoadSound(soundName);
                 return _soundDict[soundName].Sound;
             }
+            finally 
+            { 
+                _mutex.ReleaseMutex(); 
+            }
         }
 
         /// <summary>
         /// Loads a sound into our sound dictionary.
         /// </summary>
         /// <param name="soundName">The name of the sound to load.</param>
-        public static void LoadSound(string soundName)
+        private static void LoadSound(string soundName)
         {
             // Create sound definition
             try 
@@ -173,6 +178,7 @@ namespace Barebones.Asset
         {
             try // Try to unload the sound
             {
+                _mutex.WaitOne();
                 SoundMap sound = _soundDict[soundName];
                 sound.Count--;
                 if (sound.Count <= 0)
@@ -184,6 +190,10 @@ namespace Barebones.Asset
             catch (Exception ex) // If something goes wrong, which it could, spit out a minor error.
             {
                 Verbose.WriteErrorMinor($"SOUND: Error unloading sound: {soundName}\n Doing nothing about this? EX: {ex.Message}");
+            }
+            finally
+            {
+                _mutex.ReleaseMutex();
             }
         }
 
