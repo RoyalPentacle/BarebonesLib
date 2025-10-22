@@ -203,7 +203,6 @@ namespace Barebones.Asset
         /// <param name="texturePath">The name of the texture to load.</param>
         private static void LoadTexture(string texturePath)
         {
-            // Create sprite definition
             try
             {
                 GetTextureFromCache(texturePath);

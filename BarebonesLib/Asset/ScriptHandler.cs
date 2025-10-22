@@ -44,7 +44,7 @@ namespace Barebones.Asset
 
                     // Otherwise, spit out an error and return null.
                     // This shouldn't happen so long as proper naming conventions for scripts is followed.
-                    Verbose.WriteErrorMajor($"SCRIPT: Found {value.GetType} , {scriptPath} but it was not the {typeof(T).Name} we expected!");
+                    Verbose.WriteErrorMajor($"SCRIPT: Found {value.GetType}, {scriptPath} but it was not the {typeof(T).Name} we expected!");
                     return null;
                 }
                 else // Otherwise, we don't have the script cached, so load it, cache it, return it.
@@ -59,7 +59,7 @@ namespace Barebones.Asset
             }
             catch (Exception ex) // Things can go wrong sometimes.
             {
-                Verbose.WriteErrorMajor($"SCRIPT: Failed to find {typeof(T).Name} , {scriptPath} \n EX: {ex.Message}");
+                Verbose.WriteErrorMajor($"SCRIPT: Failed to find {typeof(T).Name}, {scriptPath} \n EX: {ex.Message}");
                 return null;
             }
             finally
@@ -85,12 +85,12 @@ namespace Barebones.Asset
                 string json = reader.ReadToEnd();
                 reader.Close();
                 var script = JsonConvert.DeserializeObject<T>(json);
-                Verbose.WriteLogMinor($"SCRIPT: Loaded {typeof(T).Name} , {scriptPath}");
+                Verbose.WriteLogMinor($"SCRIPT: Loaded {typeof(T).Name}, {scriptPath}");
                 return script;
             }
             catch (Exception ex)
             {
-                Verbose.WriteErrorMajor($"SCRIPT: Failed to load {typeof(T).Name} , {scriptPath} \n EX: {ex.Message}");
+                Verbose.WriteErrorMajor($"SCRIPT: Failed to load {typeof(T).Name}, {scriptPath} \n EX: {ex.Message}");
                 reader?.Close();
                 return null;
             }
