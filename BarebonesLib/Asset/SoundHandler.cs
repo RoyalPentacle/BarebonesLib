@@ -26,7 +26,7 @@ namespace Barebones.Asset
             /// <summary>
             /// Initalize the shared sound class.
             /// </summary>
-            public static void Init()
+            internal static void Init()
             {
                 int sampleRate = 44100; // The samplerate of the fallback sound.
                 float frequency = 110f; // The frequency of the fallback sound, 110 = A2

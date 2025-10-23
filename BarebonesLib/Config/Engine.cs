@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using NLua;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,15 +24,6 @@ namespace Barebones.Config
         public static SpriteBatch SpriteBatch
         {
             get { return _spriteBatch; }
-        }
-
-        /// <summary>
-        /// Sets the global pointer to the specified SpriteBatch.
-        /// </summary>
-        /// <param name="spriteBatch">The SpriteBatch to point to.</param>
-        public static void SetSpriteBatch(SpriteBatch spriteBatch)
-        {
-            _spriteBatch = spriteBatch;
         }
 
 
@@ -72,26 +64,6 @@ namespace Barebones.Config
         public static void SetGraphics(GraphicsDeviceManager graphicsDevice)
         {
             _graphicsDevice = graphicsDevice;
-        }
-
-
-        private static string _resourceDirectory;
-
-        /// <summary>
-        /// The base path all assets are stored in.
-        /// </summary>
-        public static string ResourceDirectory
-        {
-            get { return _resourceDirectory; }
-        }
-
-        /// <summary>
-        /// Set the base path for all assets.
-        /// </summary>
-        /// <param name="resourceDirectory">The root of the asset directory.</param>
-        public static void SetResourceDirectory(string resourceDirectory)
-        {
-            _resourceDirectory = resourceDirectory;
         }
 
 
@@ -157,10 +129,36 @@ namespace Barebones.Config
             _scriptCacheMaxSize = maxSize;
         }
 
+        private static NLua.Lua _luaState;
+        
+        /// <summary>
+        /// The Lua State machine.
+        /// </summary>
+        public static NLua.Lua LuaState
+        {
+            get { return _luaState; }
+        }
+
+        
+
+        /// <summary>
+        /// Initialize the Barebones engine for the given 
+        /// </summary>
         public static void Initialize()
         {
+            _spriteBatch = new SpriteBatch(_graphicsDevice.GraphicsDevice);
             Asset.Textures.Shared.Init();
             Asset.Sound.Shared.Init();
+            _luaState = new NLua.Lua();
+            _luaState.LoadCLRPackage();
+            _luaState.DoString(@"
+                import('Barebones.Lua')
+                import('System.Threading')
+                function Wait(ms)
+                    Thread.Sleep(ms)
+                end
+                ");
+ 
         }
 
         public static void Close()
@@ -172,7 +170,7 @@ namespace Barebones.Config
         /// Checks the launch arguments and sets the appropriate settings.
         /// </summary>
         /// <param name="args">The launch arguments, passed in from the system.</param>
-        public static void CheckLaunchArguments(string[] args)
+        internal static void CheckLaunchArguments(string[] args)
         {
             // Default all the console outputs to false,
             bool errorMajor = false;

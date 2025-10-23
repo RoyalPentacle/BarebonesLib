@@ -21,7 +21,7 @@ namespace Barebones
         /// Should the console be shown?
         /// Depends on if anything is set to be shown.
         /// </summary>
-        public static bool ShowConsole
+        internal static bool ShowConsole
         {
             get 
             { 
@@ -36,7 +36,7 @@ namespace Barebones
         /// <param name="errorMinor">Should the console show Minor Errors?</param>
         /// <param name="logMajor">Should the console show Major Logs?</param>
         /// <param name="logMinor">Should the console show Minor Logs?</param>
-        public static void SetConsoleOutputs(bool errorMajor, bool errorMinor, bool logMajor, bool logMinor)
+        internal static void SetConsoleOutputs(bool errorMajor, bool errorMinor, bool logMajor, bool logMinor)
         {
             _showErrorMajor = errorMajor;
             _showErrorMinor = errorMinor;
@@ -48,7 +48,7 @@ namespace Barebones
         /// Sets whether the console output should be saved. Only if we're also showing the console.
         /// </summary>
         /// <param name="saveConsole">Should we be saving the console to a file?</param>
-        public static void SetSaveConsole(bool saveConsole)
+        internal static void SetSaveConsole(bool saveConsole)
         {
             if (saveConsole && ShowConsole)
             {
@@ -61,7 +61,7 @@ namespace Barebones
         /// <summary>
         /// Close the filestream of the console output.
         /// </summary>
-        public static void CloseFilestream()
+        internal static void CloseFilestream()
         {
             _fileOutput?.Close();
         }

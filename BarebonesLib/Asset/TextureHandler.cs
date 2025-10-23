@@ -36,7 +36,7 @@ namespace Barebones.Asset
             /// <summary>
             /// Initialize the shared texture class.
             /// </summary>
-            public static void Init()
+            internal static void Init()
             {
                 // Create the shared textures
                 _pixel = new Texture2D(Engine.Graphics.GraphicsDevice, 2, 2, false, SurfaceFormat.Color);
