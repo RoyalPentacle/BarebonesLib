@@ -3,6 +3,9 @@ using Barebones.Config;
 
 namespace Barebones 
 { 
+    /// <summary>
+    /// This class exists to hold the function for initializing the console used for debug output. Do not worry about this.
+    /// </summary>
     public static class BarebonesInit
     {
         [DllImport("kernel32.dll", EntryPoint = "GetStdHandle", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
@@ -13,6 +16,10 @@ namespace Barebones
 
         const int STD_OUTPOUT_HANDLE = -11;
 
+        /// <summary>
+        /// This function takes in the launch args, parses them for console variables, then sets up the console if required.
+        /// </summary>
+        /// <param name="args">The launch arguments.</param>
         public static void ConsoleInit(string[] args)
         {
             Engine.CheckLaunchArguments(args);

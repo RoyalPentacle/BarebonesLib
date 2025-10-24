@@ -15,4 +15,8 @@
     <PackageReference Include="NLua" Version="1.7.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="NewFolder\" />
+  </ItemGroup>
+
 </Project>

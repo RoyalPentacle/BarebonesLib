@@ -126,24 +126,28 @@ namespace Barebones.Asset
         private static List<string> _sortedCache = new List<string>();
         private static long _cacheSize = 0L;
         private static Mutex _mutex = new Mutex();
+
+        private static List<Audio.Sound> _allSounds = new List<Audio.Sound>();
+
+
         /// <summary>
         /// Ask the handler to return a SoundEffect with a given name. If we don't have it, try to load it.
         /// </summary>
-        /// <param name="soundName">The name of the sound to get.</param>
+        /// <param name="soundPath">The name of the sound to get.</param>
         /// <returns>A SoundEffect.</returns>
-        public static SoundEffect GetSound(string soundName)
+        public static SoundEffect GetSound(string soundPath)
         {
             try // Try to get the sound from the dictionary
             {
                 _mutex.WaitOne();
-                SoundMap sound = _soundDict[soundName];
+                SoundMap sound = _soundDict[soundPath];
                 sound.Count++;
                 return sound.Sound;
             }
             catch // If we can't, load it instead and return that.
             {
-                LoadSound(soundName);
-                return _soundDict[soundName].Sound;
+                LoadSound(soundPath);
+                return _soundDict[soundPath].Sound;
             }
             finally 
             { 
@@ -154,18 +158,18 @@ namespace Barebones.Asset
         /// <summary>
         /// Loads a sound into our sound dictionary.
         /// </summary>
-        /// <param name="soundName">The name of the sound to load.</param>
-        private static void LoadSound(string soundName)
+        /// <param name="soundPath">The name of the sound to load.</param>
+        private static void LoadSound(string soundPath)
         {
             // Create sound definition
             try 
             {
-                GetSoundFromCache(soundName);
+                GetSoundFromCache(soundPath);
             }
             catch 
             {
-                SoundMap newSound = new SoundMap("get path from sound");
-                _soundDict.Add(soundName, newSound);
+                SoundMap newSound = new SoundMap(soundPath);
+                _soundDict.Add(soundPath, newSound);
             }
         }
 
@@ -173,23 +177,23 @@ namespace Barebones.Asset
         /// Let the handler know that an object is no longer using a given sound.
         /// If no other objects are using the sound, dispose of it, unless it's permanent.
         /// </summary>
-        /// <param name="soundName">The name of the sound to unload.</param>
-        public static void UnloadSound(string soundName)
+        /// <param name="soundPath">The name of the sound to unload.</param>
+        public static void UnloadSound(string soundPath)
         {
             try // Try to unload the sound
             {
                 _mutex.WaitOne();
-                SoundMap sound = _soundDict[soundName];
+                SoundMap sound = _soundDict[soundPath];
                 sound.Count--;
                 if (sound.Count <= 0)
                 {
-                    AddSoundToCache(soundName, sound);
+                    AddSoundToCache(soundPath, sound);
                 }
                 return;
             }
             catch (Exception ex) // If something goes wrong, which it could, spit out a minor error.
             {
-                Verbose.WriteErrorMinor($"SOUND: Error unloading sound: {soundName}\n Doing nothing about this? EX: {ex.Message}");
+                Verbose.WriteErrorMinor($"SOUND: Error unloading sound: {soundPath}\n Doing nothing about this? EX: {ex.Message}");
             }
             finally
             {
@@ -201,13 +205,13 @@ namespace Barebones.Asset
         /// Move the specified sound from active use into the cache.
         /// Trim the cache.
         /// </summary>
-        /// <param name="soundName">The name of the sound.</param>
+        /// <param name="soundPath">The name of the sound.</param>
         /// <param name="sound">The SoundMap representing the sound.</param>
-        private static void AddSoundToCache(string soundName, SoundMap sound)
+        private static void AddSoundToCache(string soundPath, SoundMap sound)
         {
-            _soundDict.Remove(soundName);
-            _soundCache.Add(soundName, sound);
-            _sortedCache.Add(soundName);
+            _soundDict.Remove(soundPath);
+            _soundCache.Add(soundPath, sound);
+            _sortedCache.Add(soundPath);
             _cacheSize += sound.FileSize;
             TrimSoundCache();
         }
@@ -215,15 +219,15 @@ namespace Barebones.Asset
         /// <summary>
         /// Move the specified sound from the cache into active use.
         /// </summary>
-        /// <param name="soundName">The name of the sound.</param>
-        private static void GetSoundFromCache(string soundName)
+        /// <param name="soundPath">The name of the sound.</param>
+        private static void GetSoundFromCache(string soundPath)
         {
-            SoundMap sound = _soundCache[soundName];
-            _soundCache.Remove(soundName);
-            _sortedCache.Remove(soundName);
+            SoundMap sound = _soundCache[soundPath];
+            _soundCache.Remove(soundPath);
+            _sortedCache.Remove(soundPath);
             _cacheSize -= sound.FileSize;
             sound.Count++;
-            _soundDict.Add(soundName, sound);
+            _soundDict.Add(soundPath, sound);
         }
 
         /// <summary>
@@ -240,6 +244,33 @@ namespace Barebones.Asset
                 _soundCache.Remove(nameRemove);
                 _sortedCache.RemoveAt(0);
             }
+        }
+
+        internal static void DeclareSoundInstance(Audio.Sound sound)
+        {
+            _allSounds.Add(sound);
+        }
+
+        internal static void DisposeStoppedInstances()
+        {
+            for (int i = _allSounds.Count - 1; i >= 0; i--)
+            {
+                if (!_allSounds[i].IsActive)
+                {
+                    _allSounds[i].Unload();
+                    _allSounds.RemoveAt(i);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Play the sound found at the specified path.
+        /// </summary>
+        /// <param name="soundPath">The path to the sound.</param>
+        public static void PlaySound(string soundPath)
+        {
+            SoundEffect soundEffect = GetSound(soundPath);
+            Audio.Sound sound = new Audio.Sound(soundEffect, soundPath);
         }
     }
 }

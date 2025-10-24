@@ -9,10 +9,13 @@ using System.Threading.Tasks;
 
 namespace Barebones.Config
 {
+    /// <summary>
+    /// Various core Engine functions and properties.
+    /// </summary>
     public static class Engine
     {
 
-        public const string LOGGING_PATH = "logs/";
+        internal const string LOGGING_PATH = "logs/";
 
 
 
@@ -151,16 +154,26 @@ namespace Barebones.Config
             Asset.Sound.Shared.Init();
             _luaState = new NLua.Lua();
             _luaState.LoadCLRPackage();
-            _luaState.DoString(@"
-                import('Barebones.Lua')
+            Lua.Script.RunScript(@"
+                import('Barebones', 'Barebones.Lua')
                 import('System.Threading')
                 function Wait(ms)
                     Thread.Sleep(ms)
                 end
                 ");
- 
         }
 
+        /// <summary>
+        /// Executes engine logic that must be done every tick.
+        /// </summary>
+        public static void Update()
+        {
+            Asset.Sound.DisposeStoppedInstances();
+        }
+
+        /// <summary>
+        /// When the game stops, call this to do any shutdown logic the engine may require.
+        /// </summary>
         public static void Close()
         {
             Verbose.CloseFilestream();
