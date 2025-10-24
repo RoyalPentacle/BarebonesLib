@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using NLua;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace Barebones.Config
 
         internal const string LOGGING_PATH = "logs/";
 
-
+        #region Global Properties
 
         private static SpriteBatch _spriteBatch;
 
@@ -142,7 +143,25 @@ namespace Barebones.Config
             get { return _luaState; }
         }
 
-        
+        #endregion
+
+
+
+        private static KeyboardState _oldKeyboardState;
+
+        internal static KeyboardState OldKeyboardState
+        {
+            get { return _oldKeyboardState; }
+        }
+
+        private static KeyboardState _newKeyboardState;
+
+        internal static KeyboardState NewKeyboardState
+        {
+            get { return _newKeyboardState; }
+        }
+
+
 
         /// <summary>
         /// Initialize the Barebones engine for the given 
@@ -164,11 +183,20 @@ namespace Barebones.Config
         }
 
         /// <summary>
-        /// Executes engine logic that must be done every tick.
+        /// Executes engine logic that must be at the start of every tick.
         /// </summary>
-        public static void Update()
+        public static void PreUpdate()
+        {
+            _newKeyboardState = Keyboard.GetState();
+        }
+
+        /// <summary>
+        /// Executes engine logic that must be done at the end of every tick.
+        /// </summary>
+        public static void PostUpdate()
         {
             Asset.Sound.DisposeStoppedInstances();
+            _oldKeyboardState = _newKeyboardState;
         }
 
         /// <summary>
