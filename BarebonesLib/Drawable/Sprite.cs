@@ -9,6 +9,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Microsoft.VisualBasic;
+using System.Runtime.Intrinsics.X86;
+using System.Runtime.InteropServices;
 
 namespace Barebones.Drawable
 {
@@ -252,7 +255,7 @@ namespace Barebones.Drawable
 
         private string _texturePath;
 
-        private Color _color;
+        private Color _colour;
 
         private Dictionary<string, Anim> _animations;
 
@@ -282,6 +285,102 @@ namespace Barebones.Drawable
 
         private float _spriteDepth = 0.5f;
 
+
+        #region Colourizing
+        private struct ColorF
+        {
+            private float R;
+            private float G;
+            private float B;
+            private float A;
+            
+
+            public ColorF(float r, float g, float b, float a)
+            {
+                R = Math.Clamp(r, -255f, 255f);
+                G = Math.Clamp(g, -255f, 255f);
+                B = Math.Clamp(b, -255f, 255f);
+                A = Math.Clamp(a, -255f, 255f);
+            }
+
+            public ColorF(Color color)
+            {
+                R = color.R;
+                G = color.G;
+                B = color.B;
+                A = color.A;
+            }
+
+            public static ColorF GetChangeOverTime(Color startColour, Color destColour, float time)
+            {
+                ColorF overTime = new ColorF();
+                float delta = 1000f / time / 60;
+                overTime.R = (destColour.R - startColour.R) * delta;
+                overTime.G = (destColour.G - startColour.G) * delta;
+                overTime.B = (destColour.B - startColour.B) * delta;
+                overTime.A = (destColour.A - startColour.A) * delta;
+                return overTime;
+            }
+
+            public Color GetColour
+            {
+                get 
+                { 
+                    return new Color((byte)Math.Abs(R), (byte)Math.Abs(G), (byte)Math.Abs(B), (byte)Math.Abs(A)); 
+                }
+            }
+
+            public static ColorF operator +(ColorF a, ColorF b)
+            {
+                ColorF result = new ColorF();
+                result.R = Math.Clamp(a.R + b.R, -255f, 255f);
+                result.G = Math.Clamp(a.G + b.G, -255f, 255f);
+                result.B = Math.Clamp(a.B + b.B, -255f, 255f);
+                result.A = Math.Clamp(a.A + b.A, -255f, 255f);
+                return result;
+            }
+
+            public static ColorF operator -(ColorF a, ColorF b)
+            {
+                ColorF result = new ColorF();
+                result.R = Math.Clamp(a.R - b.R, -255f, 255f);
+                result.G = Math.Clamp(a.G - b.G, -255f, 255f);
+                result.B = Math.Clamp(a.B - b.B, -255f, 255f);
+                result.A = Math.Clamp(a.A - b.A, -255f, 255f);
+                return result;
+            }
+
+            public static ColorF operator *(ColorF a, ColorF b)
+            {
+                ColorF result = new ColorF();
+                result.R = Math.Clamp(a.R * b.R, -255f, 255f);
+                result.G = Math.Clamp(a.G * b.G, -255f, 255f);
+                result.B = Math.Clamp(a.B * b.B, -255f, 255f);
+                result.A = Math.Clamp(a.A * b.A, -255f, 255f);
+                return result;
+            }
+            public static ColorF operator /(ColorF a, ColorF b)
+            {
+                ColorF result = new ColorF();
+                result.R = Math.Clamp(a.R / b.R, -255f, 255f);
+                result.G = Math.Clamp(a.G / b.G, -255f, 255f);
+                result.B = Math.Clamp(a.B / b.B, -255f, 255f);
+                result.A = Math.Clamp(a.A / b.A, -255f, 255f);
+                return result;
+            }
+
+        }
+
+        private bool _isColourizing = false;
+        private Color _colourizeDestColour;
+        
+        private ColorF _colourizeCurrentColour;
+        private ColorF _colourizeChangeOverTime;
+        private double _colourizeDuration;
+        private double _colourizeElapsedTime;
+
+        #endregion
+
         /// <summary>
         /// The path of the texture loaded.
         /// </summary>
@@ -295,7 +394,7 @@ namespace Barebones.Drawable
         /// </summary>
         public Color Colour
         {
-            get { return _color; }
+            get { return _colour; }
         }
 
         /// <summary>
@@ -378,7 +477,7 @@ namespace Barebones.Drawable
             _texturePath = script.TexturePath;
             _animations = script.Anims;
             _texture = Textures.GetTexture(_texturePath);
-            _color = Color.White;
+            _colour = Color.White;
             _scale.Width = 10;
             _scale.Height = 10;
             ChangeAnimation(script.DefaultAnim);
@@ -446,12 +545,13 @@ namespace Barebones.Drawable
         public void UpdateSprite()
         {
             UpdateAnimation();
+            UpdateColour();
         }
 
 
         private void UpdateAnimation()
         {
-            _animTimer += Engine.GameTime.ElapsedGameTime.Milliseconds * SpeedMultiplier;
+            _animTimer += Engine.GameTime.ElapsedGameTime.TotalMilliseconds * SpeedMultiplier;
             if (_animTimer >= _currentFrame.Speed)
             {
                 _currentFrameIndex++;
@@ -468,6 +568,47 @@ namespace Barebones.Drawable
             }
         }
 
+        private void UpdateColour()
+        {
+            if (_isColourizing)
+            {
+                _colourizeCurrentColour += _colourizeChangeOverTime;
+                _colourizeElapsedTime += Engine.GameTime.ElapsedGameTime.TotalMilliseconds;
+                if (_colourizeElapsedTime >= _colourizeDuration)
+                {
+                    _isColourizing = false;
+                    _colour = _colourizeDestColour;
+                }
+                else
+                    _colour = _colourizeCurrentColour.GetColour;
+            }
+        }
+
+        /// <summary>
+        /// Instantly sets the colour of the sprite, cancelling any active colourization.
+        /// </summary>
+        /// <param name="colour"></param>
+        public void SetColour(Color colour)
+        {
+            _isColourizing = false;
+            _colour = colour;
+        }
+
+        /// <summary>
+        /// Transition the sprite to the specified colour over the span of the specified milliseconds.
+        /// </summary>
+        /// <param name="colour">The colour to transition to.</param>
+        /// <param name="milliseconds">The time in milliseconds over which the change should occur.</param>
+        public void Colourize(Color colour, float milliseconds)
+        {
+            _colourizeDestColour = colour;
+            _colourizeDuration = milliseconds;
+            _colourizeElapsedTime = 0;
+            _colourizeCurrentColour = new ColorF(_colour);
+            _colourizeChangeOverTime = ColorF.GetChangeOverTime(_colour, colour, milliseconds);
+            _isColourizing = true;
+        }
+
         /// <summary>
         /// Draw the sprite at a given position.
         /// </summary>
@@ -480,7 +621,7 @@ namespace Barebones.Drawable
                 _drawRec.Y = (int)position.Y;
                 _drawRec.Width = (int)(_currentFrame.Width * _scale.Width);
                 _drawRec.Height = (int)(_currentFrame.Height * _scale.Height);
-                Engine.SpriteBatch.Draw(_texture, _drawRec, _currentFrame.SourceRec, _color, _rotation, _currentFrame.Origin, _spriteEffect, _spriteDepth);
+                Engine.SpriteBatch.Draw(_texture, _drawRec, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _spriteEffect, _spriteDepth);
             }
         }
 
