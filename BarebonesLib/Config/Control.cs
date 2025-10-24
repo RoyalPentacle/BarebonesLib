@@ -33,5 +33,16 @@ namespace Barebones.Config
         {
             return Engine.NewKeyboardState[key] == KeyState.Down;
         }
+
+        /// <summary>
+        /// Checks if the specified key was released this frame.
+        /// Only if the key was pressed the previous frame.
+        /// </summary>
+        /// <param name="key">The key to check.</param>
+        /// <returns>True if the key was released. False otherwise.</returns>
+        public static bool KeyReleased(Keys key)
+        {
+            return Engine.OldKeyboardState[key] == KeyState.Down && Engine.NewKeyboardState[key] == KeyState.Up;
+        }
     }
 }
