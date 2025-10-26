@@ -33,7 +33,7 @@ namespace Barebones.Drawable
             private float _height;
 
             /// <summary>
-            /// The scale of the width of the sprite. 1f is no scaling.
+            /// The scale of the width of the sprite.
             /// </summary>
             public float Width
             {
@@ -42,7 +42,7 @@ namespace Barebones.Drawable
             }
 
             /// <summary>
-            /// The scale of the higher of the sprite. 1f is no scaling.
+            /// The scale of the height of the sprite.
             /// </summary>
             public float Height
             {
@@ -57,6 +57,77 @@ namespace Barebones.Drawable
             {
                 Width = 1f;
                 Height = 1f;
+            }
+
+            /// <summary>
+            /// Gets the change per tick required to go from the starting scale to the destination scale over the duration.
+            /// </summary>
+            /// <param name="start">The starting scale.</param>
+            /// <param name="dest">The destination scale.</param>
+            /// <param name="time">The duration in milliseconds.</param>
+            /// <returns></returns>
+            public static Scale GetChangeOverTime(Scale start, Scale dest, float time)
+            {
+                Scale overTime = new Scale();
+                float delta = 1000f / time / 60;
+                overTime.Width = (dest.Width - start.Width) * delta;
+                overTime.Height = (dest.Height - start.Height) * delta;
+                return overTime;
+            }
+            /// <summary>
+            /// Adds the two scales together.
+            /// </summary>
+            /// <param name="a">The First Scale.</param>
+            /// <param name="b">The Second Scale.</param>
+            /// <returns>The sum of the two scales.</returns>
+            public static Scale operator +(Scale a, Scale b)
+            {
+                Scale result = new Scale();
+                result.Width = a.Width + b.Width;
+                result.Height = a.Height + b.Height;
+                return result;
+            }
+
+            /// <summary>
+            /// Subtracts the second scale from the first.
+            /// </summary>
+            /// <param name="a">The First Scale.</param>
+            /// <param name="b">The Seconds Scale.</param>
+            /// <returns>The result of subtracting the two scales.</returns>
+            public static Scale operator -(Scale a, Scale b)
+            {
+                Scale result = new Scale();
+                result.Width = a.Width - b.Width;
+                result.Height = a.Height - b.Height;
+                return result;
+            }
+
+            /// <summary>
+            /// Multiply the two scales together.
+            /// </summary>
+            /// <param name="a">The First Scale.</param>
+            /// <param name="b">The Second Scale.</param>
+            /// <returns>The product of the two scales.</returns>
+            public static Scale operator *(Scale a, Scale b)
+            {
+                Scale result = new Scale();
+                result.Width = a.Width * b.Width;
+                result.Height = a.Height * b.Height;
+                return result;
+            }
+
+            /// <summary>
+            /// Divide the first scale by the second scale.
+            /// </summary>
+            /// <param name="a">The First Scale.</param>
+            /// <param name="b">The Second Scale.</param>
+            /// <returns>The result of dividing the two scales.</returns>
+            public static Scale operator /(Scale a, Scale b)
+            {
+                Scale result = new Scale();
+                result.Width = a.Width / b.Width;
+                result.Height = a.Height / b.Height;
+                return result;
             }
         }
 
@@ -285,8 +356,7 @@ namespace Barebones.Drawable
 
         private float _spriteDepth = 0.5f;
 
-
-        #region Colourizing
+        #region Colourize Variables
         private struct ColorF
         {
             private float R;
@@ -381,6 +451,16 @@ namespace Barebones.Drawable
 
         #endregion
 
+        #region ScaleOverTime Variables
+
+        private bool _isScaling = false;
+        private Scale _scalingDestinationScale;
+        private Scale _scalingChangeOverTime;
+        private double _scalingDuration;
+        private double _scalingElapsedTime;
+
+        #endregion
+
         /// <summary>
         /// The path of the texture loaded.
         /// </summary>
@@ -450,7 +530,7 @@ namespace Barebones.Drawable
         }
 
         /// <summary>
-        /// What spriteeffect should be used for this sprite?
+        /// What SpriteEffect should be used for this sprite?
         /// </summary>
         public SpriteEffects SpriteEffect
         {
@@ -458,14 +538,6 @@ namespace Barebones.Drawable
             set { _spriteEffect = value; }
         }
 
-        /// <summary>
-        /// Unload the current sprite.
-        /// </summary>
-        public void UnloadSprite()
-        {
-            Textures.UnloadTexture(_texturePath);
-            _texture = null;
-        }
 
         /// <summary>
         /// Construct a new sprite from a path to a SpriteScript.
@@ -483,25 +555,38 @@ namespace Barebones.Drawable
             ChangeAnimation(script.DefaultAnim);
         }
 
+        #region Animation Functions
+
         /// <summary>
         /// Change the current animation.
         /// </summary>
         /// <param name="newAnim">The new animation.</param>
         public void ChangeAnimation(string newAnim)
         {
+            ChangeAnimation(newAnim, "");
+        }
+
+        /// <summary>
+        /// Change the current animation, then when the animation loops, change to another animation.
+        /// </summary>
+        /// <param name="newAnim">The first animation.</param>
+        /// <param name="nextAnim">The animation to set next.</param>
+        public void ChangeAnimation(string newAnim, string nextAnim)
+        {
             try
             {
                 if (_currentAnimation != _animations[newAnim])
                 {
                     if (_currentAnimation?.EndingLuaScript != null)
-                        Barebones.Lua.Script.RunScript(_currentAnimation.EndingLuaScript);
+                        Lua.Script.RunScript(_currentAnimation.EndingLuaScript);
 
                     _currentAnimation = _animations[newAnim];
                     _currentAnimName = newAnim; // Just for logging purposes.
+                    _nextAnim = nextAnim;
                     ChangeFrame(0, true);
 
                     if (_currentAnimation.StartingLuaScript != null)
-                        Barebones.Lua.Script.RunScript(_currentAnimation.StartingLuaScript);
+                        Lua.Script.RunScript(_currentAnimation.StartingLuaScript);
                 }
             }
             catch (Exception ex)
@@ -527,27 +612,17 @@ namespace Barebones.Drawable
             if (forceLuaScript || _currentFrame != _currentAnimation.Frames[frameIndex])
             {
                 if (_currentFrame?.EndingLuaScript != null)
-                    Barebones.Lua.Script.RunScript(_currentFrame.EndingLuaScript);
+                    Lua.Script.RunScript(_currentFrame.EndingLuaScript);
 
                 _currentFrame = _currentAnimation.Frames[frameIndex];
                 _currentFrameIndex = frameIndex;
                 _animTimer = 0;
 
                 if (_currentFrame.StartingLuaScript != null)
-                    Barebones.Lua.Script.RunScript(_currentFrame.StartingLuaScript);
+                    Lua.Script.RunScript(_currentFrame.StartingLuaScript);
 
             }
         }
-
-        /// <summary>
-        /// Update the sprite.
-        /// </summary>
-        public void UpdateSprite()
-        {
-            UpdateAnimation();
-            UpdateColour();
-        }
-
 
         private void UpdateAnimation()
         {
@@ -561,13 +636,15 @@ namespace Barebones.Drawable
                     if (_nextAnim != "")
                     {
                         ChangeAnimation(_nextAnim);
-                        _nextAnim = "";
+                        return;
                     }
                 }
                 ChangeFrame(_currentFrameIndex, false);
             }
         }
+        #endregion
 
+        #region Colour Functions
         private void UpdateColour()
         {
             if (_isColourizing)
@@ -587,7 +664,7 @@ namespace Barebones.Drawable
         /// <summary>
         /// Instantly sets the colour of the sprite, cancelling any active colourization.
         /// </summary>
-        /// <param name="colour"></param>
+        /// <param name="colour">The colour to set the sprite to.</param>
         public void SetColour(Color colour)
         {
             _isColourizing = false;
@@ -607,6 +684,73 @@ namespace Barebones.Drawable
             _colourizeCurrentColour = new ColorF(_colour);
             _colourizeChangeOverTime = ColorF.GetChangeOverTime(_colour, colour, milliseconds);
             _isColourizing = true;
+        }
+        #endregion
+
+        #region Scale Functions
+
+        /// <summary>
+        /// Instantly set the scale of the sprite, cancelling any active scaling over time.
+        /// </summary>
+        /// <param name="width">The width of the scalar.</param>
+        /// <param name="height">The height of the scalar.</param>
+        public void SetScale(float width, float height)
+        {
+            _isScaling = false;
+            _scale.Width = width;
+            _scale.Height = height;
+        }
+
+
+        /// <summary>
+        /// Transition the sprite to the specified scale over the span of the specified milliseconds.
+        /// </summary>
+        /// <param name="width">The width scalar.</param>
+        /// <param name="height">The height scalar.</param>
+        /// <param name="milliseconds">The time in milliseconds over which the change should occur.</param>
+        public void ScaleOverTime(float width, float height, float milliseconds)
+        {
+            _scalingDestinationScale.Width = width;
+            _scalingDestinationScale.Height = height;
+            _scalingChangeOverTime = Scale.GetChangeOverTime(_scale, _scalingDestinationScale, milliseconds);
+            _scalingElapsedTime = 0L;
+            _scalingDuration = milliseconds;
+            _isScaling = true;
+        }
+
+        private void UpdateScale()
+        {
+            if (_isScaling)
+            { 
+                _scalingElapsedTime += Engine.GameTime.ElapsedGameTime.TotalMilliseconds;
+                if (_scalingElapsedTime > _scalingDuration)
+                {
+                    _isScaling = false;
+                    _scale = _scalingDestinationScale;
+                }
+                else
+                    _scale += _scalingDestinationScale;
+            }
+        }
+
+        #endregion
+        /// <summary>
+        /// Update the sprite.
+        /// </summary>
+        public void UpdateSprite()
+        {
+            UpdateAnimation();
+            UpdateColour();
+            UpdateScale();
+        }
+
+        /// <summary>
+        /// Unload the current sprite.
+        /// </summary>
+        public void UnloadSprite()
+        {
+            Textures.UnloadTexture(_texturePath);
+            _texture = null;
         }
 
         /// <summary>

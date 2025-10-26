@@ -41,15 +41,6 @@ namespace Barebones.Config
             get { return _gameTime; }
         }
 
-        /// <summary>
-        /// Sets the global pointer to the specified Gametime.
-        /// </summary>
-        /// <param name="gameTime">The GameTime to point to.</param>
-        public static void SetGameTime(GameTime gameTime)
-        {
-            _gameTime = gameTime;
-        }
-
 
         private static GraphicsDeviceManager _graphicsDevice;
 
@@ -185,8 +176,9 @@ namespace Barebones.Config
         /// <summary>
         /// Executes engine logic that must be at the start of every tick.
         /// </summary>
-        public static void PreUpdate()
+        public static void PreUpdate(GameTime gameTime)
         {
+            _gameTime = gameTime;
             _newKeyboardState = Keyboard.GetState();
         }
 
