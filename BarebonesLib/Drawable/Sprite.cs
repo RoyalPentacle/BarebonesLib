@@ -550,8 +550,8 @@ namespace Barebones.Drawable
             _animations = script.Anims;
             _texture = Textures.GetTexture(_texturePath);
             _colour = Color.White;
-            _scale.Width = 10;
-            _scale.Height = 10;
+            _scale.Width = 1;
+            _scale.Height = 1;
             ChangeAnimation(script.DefaultAnim);
         }
 
@@ -713,7 +713,7 @@ namespace Barebones.Drawable
             _scalingDestinationScale.Width = width;
             _scalingDestinationScale.Height = height;
             _scalingChangeOverTime = Scale.GetChangeOverTime(_scale, _scalingDestinationScale, milliseconds);
-            _scalingElapsedTime = 0L;
+            _scalingElapsedTime = 0.0;
             _scalingDuration = milliseconds;
             _isScaling = true;
         }
