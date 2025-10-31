@@ -550,8 +550,6 @@ namespace Barebones.Drawable
             _animations = script.Anims;
             _texture = Textures.GetTexture(_texturePath);
             _colour = Color.White;
-            _scale.Width = 1;
-            _scale.Height = 1;
             ChangeAnimation(script.DefaultAnim);
         }
 
