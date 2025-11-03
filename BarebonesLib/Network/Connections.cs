@@ -54,25 +54,25 @@ namespace Barebones.Network
         }
 
         /// <summary>
-        /// Construct a new packet by doing a deep copy of a UdpReceiveResult.
+        /// Construct a new packet out of a UdpReceiveResult.
         /// </summary>
-        /// <param name="result">The UdpReceiveResult to do a deep copy of.</param>
+        /// <param name="result">The UdpReceiveResult to convert .</param>
         public Packet(UdpReceiveResult result)
         {
-            _data = (byte[])result.Buffer.Clone();
-            _endpoint = new IPEndPoint(result.RemoteEndPoint.Address, result.RemoteEndPoint.Port);
+            _data = result.Buffer;
+            _endpoint = result.RemoteEndPoint;
         }
 
         /// <summary>
-        /// Construct a new packet by doing a deep copy of a provided byte array and IPEndPoint.
+        /// Construct a new packet by getting a provided byte array and IPEndPoint.
         /// I don't know why you'd want to do this, but you can.
         /// </summary>
         /// <param name="data">The byte array to copy.</param>
         /// <param name="endpoint">The IPEndPoint.</param>
         public Packet(byte[] data, IPEndPoint endpoint)
         {
-            _data = (byte[])data.Clone();
-            _endpoint = new IPEndPoint(endpoint.Address, endpoint.Port);
+            _data = data;
+            _endpoint = endpoint;
         }
     }
 
