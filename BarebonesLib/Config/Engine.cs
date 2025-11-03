@@ -5,6 +5,7 @@ using NLua;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -132,6 +133,26 @@ namespace Barebones.Config
         public static NLua.Lua LuaState
         {
             get { return _luaState; }
+        }
+
+        private static int _defaultUDPHostPort = 51234;
+
+        /// <summary>
+        /// The port the engine will try to host on, if no port is specified when called.
+        /// </summary>
+        public static int UDPHostPort
+        {
+            get { return _defaultUDPHostPort; }
+        }
+
+        private static IPAddress _defaultUDPHostAddress = IPAddress.Loopback;
+
+        /// <summary>
+        /// The address the engine will try to send packets to, if no port is specified when called.
+        /// </summary>
+        public static IPAddress UDPHostAddress
+        {
+            get { return _defaultUDPHostAddress; }
         }
 
         #endregion
@@ -273,6 +294,18 @@ namespace Barebones.Config
                         {
                             saveOutput = true;
                             break;
+                        }
+                        case "ip":
+                        {
+                            if (splitArg.Length > 1)
+                                {
+                                    if (!IPAddress.TryParse(splitArg[1], out _defaultUDPHostAddress))
+                                        _defaultUDPHostAddress = IPAddress.Loopback;
+                                }
+                                if (splitArg.Length > 2)
+                                    if (!int.TryParse(splitArg[2], out _defaultUDPHostPort))
+                                        _defaultUDPHostPort = 51234;
+                                break;
                         }
                     }
                 }
