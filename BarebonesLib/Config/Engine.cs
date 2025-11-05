@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barebones.Network;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLua;
@@ -155,6 +156,28 @@ namespace Barebones.Config
             get { return _defaultUDPHostAddress; }
         }
 
+        private static long _timeoutDuration = 5000;
+
+        /// <summary>
+        /// How long should the netcode wait to receive a packet from a client, before asking if they're still there?
+        /// </summary>
+        public static long NetworkTimeoutDuration
+        {
+            get { return _timeoutDuration; }
+            set { _timeoutDuration = value; }
+        }
+
+        private static int _timeoutRetries = 5;
+
+        /// <summary>
+        /// How many times should the netcode attempt to ask a client if they're still alive?
+        /// </summary>
+        public static int TimeoutMaxRetries
+        {
+            get { return _timeoutRetries; }
+            set { _timeoutRetries = value; }
+        }
+
         #endregion
 
 
@@ -208,6 +231,7 @@ namespace Barebones.Config
         /// </summary>
         public static void PostUpdate()
         {
+            Connections.UpdateNetwork();
             Asset.Sound.DisposeStoppedInstances();
             _oldKeyboardState = _newKeyboardState;
         }

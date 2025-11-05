@@ -1,13 +1,18 @@
-﻿using System;
+﻿using Barebones.Config;
+using NVorbis.Contracts;
+using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Barebones.Config;
 
 namespace Barebones.Network
 {
@@ -81,6 +86,47 @@ namespace Barebones.Network
     /// </summary>
     public static class Connections
     {
+        private class HeartbeatTimer
+        {
+            private long _time = 0;
+            private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
+            private int _retryCount = 0;
+            private byte _id;
+
+            public HeartbeatTimer(byte id)
+            {
+                _id = id;
+            }
+
+            public void Update()
+            {
+                Interlocked.Exchange(ref _time, _stopwatch.ElapsedMilliseconds);
+                if (_time > Engine.NetworkTimeoutDuration)
+                {
+                    SendHeartbeatRequestPacket(_id);
+                    IncrementRetry();
+                    Verbose.WriteLogMinor($"Sent Heartbeat request to client {_id}. Attempt: {_retryCount}/{Engine.TimeoutMaxRetries}");
+                    if (_retryCount > Engine.TimeoutMaxRetries)
+                    {
+                        Verbose.WriteLogMinor($"Enqueueing client {_id} for removal.");
+                        _clientsToRemoveTimeout.Enqueue(_id);
+                    }
+                }
+            }
+
+            private void IncrementRetry()
+            {
+                Interlocked.Increment(ref _retryCount);
+                _stopwatch.Restart();
+            }
+            
+            public void Reset()
+            {
+                Interlocked.Exchange(ref _retryCount, 0);
+                _stopwatch.Restart();
+            }
+        }
+
         private static UdpClient? _udpClient;
         private static byte _clientID;
         private static bool _isHost;
@@ -89,11 +135,11 @@ namespace Barebones.Network
         private readonly static BijectiveConcurrentDictionary<string, byte> _packetTypes = new();
         private readonly static Dictionary<byte, Action<Packet>> _typeActions = new();
 
-        private static int _timeoutDuration = 5000;
-        private static int _timeoutNumRetries = 5;
-
         private readonly static BijectiveConcurrentDictionary<IPEndPoint, byte> _clientDict = new();
-        private readonly static ConcurrentDictionary<byte, double> _clientTimeoutDict = new();
+        private readonly static ConcurrentDictionary<byte, HeartbeatTimer> _clientTimeoutDict = new();
+
+        private readonly static ConcurrentQueue<byte> _clientsToRemoveTimeout = new ConcurrentQueue<byte>();
+        private readonly static ConcurrentQueue<byte> _clientsToRemoveNormal = new ConcurrentQueue<byte>();
 
         private static Func<Packet, bool>? _routeToGameConnectionRequest;
         private static Action<Packet>? _routeToGamePostConnectionRequest;
@@ -103,6 +149,9 @@ namespace Barebones.Network
         private static Action<Packet>? _routeToGamePostDisconnectRequest;
         private static Func<Packet, bool>? _routeToGameDisconnectAcknowledge;
         private static Action<Packet>? _routeToGamePostDisconnectAcknowledge;
+        private static Func<Packet, bool>? _routeToGameClientDisconnectAlert;
+        private static Action<Packet>? _routeToGamePostClientDisconnectAlert;
+        private static Action<byte>? _routeToGameClientTimeout;
 
 
         private static CancellationTokenSource _cts = new CancellationTokenSource();
@@ -157,6 +206,7 @@ namespace Barebones.Network
             RegisterPacketType("ConnectionAcknowledge", 3, ReceiveConnectionAcknowledgePacket);
             RegisterPacketType("DisconnectRequest", 4, ReceiveDisconnectRequestPacket);
             RegisterPacketType("DisconnectAcknowledge", 5, ReceiveDisconnectAcknowledgePacket);
+            RegisterPacketType("ClientDisconnectAlert", 6, ReceiveClientDisconnectAlert);
         }
 
         /// <summary>
@@ -184,7 +234,7 @@ namespace Barebones.Network
         private static bool AddClient(IPEndPoint endPoint, byte clientID)
         {
 
-            if (_clientDict.TryAdd(endPoint, clientID) && _clientTimeoutDict.TryAdd(clientID, 0.0))
+            if (_clientDict.TryAdd(endPoint, clientID) && _clientTimeoutDict.TryAdd(clientID, new HeartbeatTimer(clientID)))
             {
                 Verbose.WriteLogMajor($"Added client: {endPoint} with ID {clientID}.");
                 return true;
@@ -192,7 +242,7 @@ namespace Barebones.Network
             else
             {
                 _clientDict.Remove(endPoint);
-                _clientTimeoutDict.Remove(clientID, out double val);
+                _clientTimeoutDict.Remove(clientID, out _);
                 Verbose.WriteErrorMinor($"Failed to add client: {endPoint} with ID {clientID}. Likely an endpoint shared with another client, or too many client connected clients. Client Count: {_clientDict.Count}");
                 return false;
             }
@@ -294,6 +344,37 @@ namespace Barebones.Network
             _routeToGamePostDisconnectAcknowledge = callback;
         }
 
+        /// <summary>
+        /// Set the function to be called after a client has timed out.
+        /// If this is null, we do nothing.
+        /// </summary>
+        /// <param name="callback">The function to call.</param>
+        public static void SetClientTimeoutAction(Action<byte> callback)
+        {
+            _routeToGameClientTimeout = callback;
+        }
+
+        /// <summary>
+        /// Set the function to be called when a client disconnect alert packet is received.
+        /// It should return true if we can go ahead, or false otherwise.
+        /// If this is null, we always assume true.
+        /// </summary>
+        /// <param name="callback">The function to call.</param>
+        public static void SetClientDisconnectAlertFunc(Func<Packet, bool> callback)
+        {
+            _routeToGameClientDisconnectAlert = callback;
+        }
+
+        /// <summary>
+        /// Set the function to be called after a client disconnect alert packet has been received and processed.
+        /// If this is null, we do nothing.
+        /// </summary>
+        /// <param name="callback">The function to call.</param>
+        public static void SetPostClientDisconnectAlertAction(Action<Packet> callback)
+        {
+            _routeToGamePostClientDisconnectAlert = callback;
+        }
+
         private static void StartUDP(int port)
         {
             if (_udpClient == null)
@@ -304,8 +385,49 @@ namespace Barebones.Network
                 uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
                 _udpClient.Client.IOControl((int)SIO_UDP_CONNRESET, [Convert.ToByte(false)], null);
             }
+            bool connReq = _routeToGameConnectionRequest != null;
+            bool postConnReq = _routeToGamePostConnectionRequest != null;
+            bool connAck = _routeToGameConnectionAcknowledge != null;
+            bool postConnAck = _routeToGamePostConnectionAcknowledge != null;
+            bool discReq = _routeToGameDisconnectRequest != null;
+            bool postDiscReq = _routeToGamePostDisconnectRequest != null;
+            bool discAck = _routeToGameDisconnectAcknowledge != null;
+            bool postDiscAck = _routeToGamePostDisconnectAcknowledge != null;
+            bool clientDiscAlert = _routeToGameClientDisconnectAlert != null;
+            bool postClientDiscAlert = _routeToGamePostClientDisconnectAlert != null;
+            bool clientTimeout = _routeToGameClientTimeout != null;
+            bool unboundDelegate = connReq && postConnReq && connAck && postConnAck && discReq && postDiscReq && discAck && postDiscAck && clientDiscAlert && postClientDiscAlert && clientTimeout;
+            if (!unboundDelegate)
+            {
+                string msg = "";
+                if (!connReq)
+                    msg += "routeToGameConnectionRequest is unbound.\n";
+                if (!postConnReq)
+                    msg += "routeToGamePostConnectionRequest is unbound.\n";
+                if (!connAck)
+                    msg += "routeToGameConnectionAcknowledge is unbound.\n";
+                if (!postConnAck)
+                    msg += "routeToGamePostConnectionAcknowledge is unbound.\n";
+                if (!discReq)
+                    msg += "routeToGameDisconnectRequest is unbound.\n";
+                if (!postDiscReq)
+                    msg += "routeToGamePostDisconnectRequest is unbound.\n";
+                if (!discAck)
+                    msg += "routeToGameDisconnectAcknowledge is unbound.\n";
+                if (!postDiscAck)
+                    msg += "routeToGamePostDisconnectAcknowledge is unbound.\n";
+                if (!clientDiscAlert)
+                    msg += "routeToGameClientDisconnectAlert is unbound.\n";
+                if (!postClientDiscAlert)
+                    msg += "routeToGamePostClientDisconnectAlert is unbound.\n";
+                if (!clientTimeout)
+                    msg += "routeToGameClientTimeout is unbound.\n";
 
+                Verbose.WriteLogMinor($"Delegate Alert: \n{msg}");
+                Verbose.WriteLogMinor($"This is probably not a problem. This is for debug purposes.");
+            }
             Task.Factory.StartNew(ReceiveUDPAsync);
+            Task.Factory.StartNew(DoClientTimeout);
         }
 
         /// <summary>
@@ -324,7 +446,49 @@ namespace Barebones.Network
                 StartUDP(Engine.UDPHostPort);
             else
                 StartUDP(0);
+
+
         }
+
+        /// As time ticks on, we track how long it's been since we've heard from a client on the main thread.
+        /// When the time is greater than the max duration, ask for a heartbeat.
+        /// If we don't receive any packets, retry again, up the max number of times.
+        /// Then, remove the client.
+        /// But, Concurrence.
+        /// The checks for timeout happens on the main thread
+        /// Simultaeneously, there is the UDP thread that is checking and possibly modifying the collection of clients
+        /// So we have to be very careful about how we do this, so that it's threadsafe on both ends.
+
+        internal static void UpdateNetwork()
+        {
+            while (_clientsToRemoveTimeout.TryDequeue(out var id))
+            {
+                _mut.WaitOne();
+                RemoveClient(id, true, "Connection Timed Out.");
+                _mut.ReleaseMutex();
+            }
+            while (_clientsToRemoveNormal.TryDequeue(out var id))
+            {
+                _mut.WaitOne();
+                RemoveClient(id, false, "Requested Disconnect.");
+                _mut.ReleaseMutex();
+            }
+            
+        }
+
+        private static async void DoClientTimeout()
+        {
+            while (!_cts.IsCancellationRequested)
+            {
+                List<HeartbeatTimer> timers = _clientTimeoutDict.Values.ToList();
+                foreach (HeartbeatTimer timer in timers)
+                {
+                    timer.Update();
+                }
+            }
+        }
+
+        
 
         private static async void ReceiveUDPAsync()
         {
@@ -336,10 +500,20 @@ namespace Barebones.Network
                     {
                         UdpReceiveResult receivedResult = await _udpClient.ReceiveAsync(_cts.Token);
                         Packet packet = new Packet(receivedResult);
+
                         if (packet.Data.Length > 0)
                         {
                             if (_typeActions.ContainsKey(packet.Data[0]))
+                            {
+                                Verbose.WriteLogMinor($"Packet {_packetTypes[packet.Data[0]]} received from {packet.EndPoint}");
+                                _mut.WaitOne();
+                                if (_clientDict.TryGetValue(packet.EndPoint, out byte id))
+                                {
+                                    _clientTimeoutDict[id].Reset();
+                                }
+                                _mut.ReleaseMutex();
                                 _typeActions[packet.Data[0]](packet);
+                            }
                             else
                                 Verbose.WriteErrorMinor($"Unknown Packet Type Received! Byte value: {packet.Data[0]}");
                         }
@@ -347,6 +521,10 @@ namespace Barebones.Network
                     catch (OperationCanceledException)
                     {
                         Verbose.WriteLogMinor($"UDP Client cancelled.");
+                    }
+                    catch (Exception e)
+                    {
+                        Verbose.WriteErrorMajor($"{e.Message}");
                     }
                 }
             }
@@ -375,6 +553,9 @@ namespace Barebones.Network
             _udpClient?.Dispose();
             _udpClient = null;
             _clientDict.Clear();
+            _clientTimeoutDict.Clear();
+            _clientsToRemoveTimeout.Clear();
+            _clientsToRemoveNormal.Clear();
             _cts.TryReset();
         }
 
@@ -466,22 +647,33 @@ namespace Barebones.Network
 
         private static void ReceiveHeartbeatRequestPacket(Packet packet)
         {
-
+            Verbose.WriteLogMinor($"Received Heartbeat Request from {packet.EndPoint}. Sent back an acknowledge.");
+            SendHeartbeatAcknowledgePacket(packet.EndPoint);
         }
 
-        private static void SendHeartbeatRequestPacket()
+        private static void SendHeartbeatRequestPacket(byte id)
         {
-
+            byte[] buffer = [id];
+            if (_clientDict.TryGetKey(id, out IPEndPoint ip))
+            {
+                SendUDPPacket(buffer, "HeartbeatRequest", ip);
+            }
+            else
+            {
+                Verbose.WriteErrorMinor($"Heartbeat Error! Tried to send Heartbeat Request but couldn't get the endpoint to send to! Client ID: {id}");
+            }
         }
 
         private static void ReceiveHeartbeatAcknowledgePacket(Packet packet)
         {
-
+            // I don't think we really need to do anything here, but maybe? The act of receiving the packet at all resets the timeout.
         }
 
-        private static void SendHeartbeatAcknowledgePacket()
+        private static void SendHeartbeatAcknowledgePacket(IPEndPoint ip)
         {
-
+            byte[] buffer = [_clientID];
+            SendUDPPacket(buffer, "HeartbeatAcknowledge", ip);
+            Verbose.WriteLogMinor($"Sent back a heartbeat acknowledge to {ip}.");
         }
 
 
@@ -494,6 +686,7 @@ namespace Barebones.Network
             if (_routeToGameConnectionRequest == null || _routeToGameConnectionRequest(packet))
             {
                 byte id = GetUnusedClientID();
+                _mut.WaitOne();
                 if (AddClient(packet.EndPoint, id))
                 {
                     byte[] buffer = [id];
@@ -501,6 +694,7 @@ namespace Barebones.Network
                     if (_routeToGamePostConnectionRequest != null)
                         _routeToGamePostConnectionRequest(packet);
                 }
+                _mut.ReleaseMutex();
             }
         }
 
@@ -540,12 +734,14 @@ namespace Barebones.Network
             {
                 if (packet.Data.Length > 1)
                 {
+                    _mut.WaitOne();
                     if (AddClient(packet.EndPoint, 0))
                     {
                         _clientID = packet.Data[1];
                         if (_routeToGamePostConnectionAcknowledge != null)
                             _routeToGamePostConnectionAcknowledge(packet);
                     }
+                    _mut.ReleaseMutex();
                 }
             }
         }
@@ -568,17 +764,18 @@ namespace Barebones.Network
         {
             if (_routeToGameDisconnectRequest == null || _routeToGameDisconnectRequest(packet))
             {
+                _mut.WaitOne();
                 if (_clientDict.Contains(packet.EndPoint))
                 {
                     byte id = _clientDict[packet.EndPoint];
-                    _clientDict.Remove(id);
-                    _clientTimeoutDict.Remove(id, out double val);
+                    _clientsToRemoveNormal.Enqueue(id);
                     SendDisconnectAcknowledgePacket(packet.EndPoint);
                     if (_routeToGamePostDisconnectRequest != null)
                     {
                         _routeToGamePostDisconnectRequest(packet);
                     }
                 }
+                _mut.ReleaseMutex();
             }
         }
 
@@ -592,17 +789,62 @@ namespace Barebones.Network
         {
             if (_routeToGameDisconnectAcknowledge == null || _routeToGameDisconnectAcknowledge(packet))
             {
+                _mut.WaitOne();
                 if (_clientDict.Contains(packet.EndPoint))
                 {
                     byte id = _clientDict[packet.EndPoint];
-                    _clientDict.Remove(id);
-                    _clientTimeoutDict.Remove(id, out double val);
+                    _clientsToRemoveNormal.Enqueue(id);
                     if (_routeToGamePostDisconnectAcknowledge != null)
                     {
                         _routeToGamePostDisconnectAcknowledge(packet);
                     }
                 }
+                _mut.ReleaseMutex();
             }
+        }
+
+        /// <summary>
+        /// Inform all connected clients that a specified client has disconnected.
+        /// </summary>
+        /// <param name="id">The ID of the client to disconnect.</param>
+        public static void SendClientDisconnectAlert(byte id)
+        {
+            byte[] buffer = [id];
+            SendUDPPacket(buffer, "ClientDisconnectAlert");
+            Verbose.WriteLogMinor($"Sending disconnect alert for client {id}");        }
+
+        private static void ReceiveClientDisconnectAlert(Packet packet)
+        {
+            if (_routeToGameClientDisconnectAlert == null || _routeToGameClientDisconnectAlert(packet))
+            {
+                if (packet.Data.Length > 1)
+                {
+                    _mut.WaitOne();
+                    if (_clientDict.Contains(packet.Data[1]))
+                    {
+                        _clientsToRemoveNormal.Enqueue(packet.Data[1]);
+                    }
+                    if (_routeToGamePostClientDisconnectAlert != null)
+                    {
+                        _routeToGamePostClientDisconnectAlert(packet);
+                    }
+                    _mut.ReleaseMutex();
+                }
+            }
+        }
+
+        internal static void RemoveClient(byte id, bool timeout, string? reason)
+        {
+            _clientDict.Remove(id);
+            _clientTimeoutDict.Remove(id, out _);
+            if (timeout)
+            {
+                if(_routeToGameClientTimeout != null)
+                {
+                    _routeToGameClientTimeout(id);
+                }
+            }
+            Verbose.WriteLogMinor($"Client {id} disconnected. Reason: {reason}");
         }
     }
 }
