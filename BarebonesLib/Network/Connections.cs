@@ -427,7 +427,7 @@ namespace Barebones.Network
                 Verbose.WriteLogMinor($"This is probably not a problem. This is for debug purposes.");
             }
             Task.Factory.StartNew(ReceiveUDPAsync);
-            Task.Factory.StartNew(DoClientTimeout);
+            Task.Run(DoClientTimeout);
         }
 
         /// <summary>
@@ -476,10 +476,11 @@ namespace Barebones.Network
             
         }
 
-        private static async void DoClientTimeout()
+        private static async Task DoClientTimeout()
         {
             while (!_cts.IsCancellationRequested)
             {
+                await Task.Delay(1000);
                 List<HeartbeatTimer> timers = _clientTimeoutDict.Values.ToList();
                 foreach (HeartbeatTimer timer in timers)
                 {
@@ -505,7 +506,6 @@ namespace Barebones.Network
                         {
                             if (_typeActions.ContainsKey(packet.Data[0]))
                             {
-                                Verbose.WriteLogMinor($"Packet {_packetTypes[packet.Data[0]]} received from {packet.EndPoint}");
                                 _mut.WaitOne();
                                 if (_clientDict.TryGetValue(packet.EndPoint, out byte id))
                                 {
@@ -641,7 +641,7 @@ namespace Barebones.Network
         /// <param name="endPoint">The endpoint to send the packet to.</param>
         public static void SendUDPPacket(byte[] packet, IPEndPoint endPoint)
         {
-            _udpClient?.Send(packet, endPoint);
+            _udpClient?.SendAsync(packet, endPoint);
         }
 
 
