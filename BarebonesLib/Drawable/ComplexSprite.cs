@@ -18,7 +18,7 @@ namespace Barebones.Drawable
     /// <summary>
     /// A texture to be drawn on screen, with varying supporting functions.
     /// </summary>
-    public class Sprite : SimpleSprite
+    public class ComplexSprite : SimpleSprite
     {
 
         /// <summary>
@@ -229,6 +229,8 @@ namespace Barebones.Drawable
 
         private string _nextAnim = "";
 
+        private bool _ignoreLua = false;
+
         /// <summary>
         /// The collection of animations for this sprite.
         /// </summary>
@@ -243,6 +245,14 @@ namespace Barebones.Drawable
         public Anim CurrentAnimation
         {
             get { return _currentAnimation; }
+        }
+
+        /// <summary>
+        /// The name of the current animation being displayed.
+        /// </summary>
+        public string CurrentAnimationName
+        {
+            get { return _currentAnimName; }
         }
 
         /// <summary>
@@ -268,10 +278,20 @@ namespace Barebones.Drawable
         /// Construct a new sprite from a path to a SpriteScript.
         /// </summary>
         /// <param name="scriptPath">The path to the SpriteScript to load.</param>
-        public Sprite(string scriptPath) : base(scriptPath, out SpriteScript script)
+        public ComplexSprite(string scriptPath) : this(scriptPath, false)
         {
+
+        }
+
+        /// <summary>
+        /// Construct a new sprite from a path to a SpriteScript, with the option to ignore lua scripts.
+        /// </summary>
+        /// <param name="scriptPath">The path to the SpriteScript to load.</param>
+        /// <param name="ignoreLua">Ignore Lua?</param>
+        public ComplexSprite(string scriptPath, bool ignoreLua) : base(scriptPath, out SpriteScript script)
+        {
+            _ignoreLua = ignoreLua;
             _animations = script.Anims;
-            _texture = Textures.GetTexture(_texturePath);
             _colour = Color.White;
             ChangeAnimation(script.DefaultAnim);
         }
@@ -298,7 +318,7 @@ namespace Barebones.Drawable
             {
                 if (_currentAnimation != _animations[newAnim])
                 {
-                    if (_currentAnimation?.EndingLuaScript != null)
+                    if (!_ignoreLua && _currentAnimation?.EndingLuaScript != null)
                         Lua.Script.RunScript(_currentAnimation.EndingLuaScript);
 
                     _currentAnimation = _animations[newAnim];
@@ -306,7 +326,7 @@ namespace Barebones.Drawable
                     _nextAnim = nextAnim;
                     ChangeFrame(0, true);
 
-                    if (_currentAnimation.StartingLuaScript != null)
+                    if (!_ignoreLua && _currentAnimation.StartingLuaScript != null)
                         Lua.Script.RunScript(_currentAnimation.StartingLuaScript);
                 }
             }
@@ -332,17 +352,19 @@ namespace Barebones.Drawable
             }
             if (forceLuaScript || _currentFrame != _currentAnimation.Frames[frameIndex])
             {
-                if (_currentFrame?.EndingLuaScript != null)
+                if (!_ignoreLua && _currentFrame?.EndingLuaScript != null)
                     Lua.Script.RunScript(_currentFrame.EndingLuaScript);
 
                 _currentFrame = _currentAnimation.Frames[frameIndex];
                 _currentFrameIndex = frameIndex;
                 _animTimer = 0;
 
-                if (_currentFrame.StartingLuaScript != null)
+                if (!_ignoreLua && _currentFrame.StartingLuaScript != null)
                     Lua.Script.RunScript(_currentFrame.StartingLuaScript);
 
             }
+            _drawRec.Width = _currentFrame.Width;
+            _drawRec.Height = _currentFrame.Height;
         }
 
         private void UpdateAnimation()

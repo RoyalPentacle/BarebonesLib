@@ -169,8 +169,16 @@ namespace Barebones.Asset
         private static Dictionary<string, TextureMap> _textureCache = new Dictionary<string, TextureMap>();
         private static List<string> _sortedCache = new List<string>();
         private static long _cacheSize = 0L;
+        
         private static Mutex _mutex = new Mutex();
 
+        /// <summary>
+        /// The current size of the texture cache
+        /// </summary>
+        public static long CacheSize
+        {
+            get { return _cacheSize; }
+        }
         /// <summary>
         /// Ask the handler to return a Texture2D with a given name. If we don't have it, try to load it.
         /// </summary>

@@ -17,7 +17,7 @@ namespace Barebones.Asset.Scripts
         private string _texturePath;
 
         [JsonProperty]
-        private Dictionary<string, Sprite.Anim> _anims = new Dictionary<string, Sprite.Anim>();
+        private Dictionary<string, ComplexSprite.Anim> _anims = new Dictionary<string, ComplexSprite.Anim>();
 
         [JsonProperty]
         private string _defaultAnim;
@@ -43,7 +43,7 @@ namespace Barebones.Asset.Scripts
         /// The Dictionary of Animations for the sprite.
         /// </summary>
         [JsonIgnore]
-        public Dictionary<string, Sprite.Anim> Anims
+        public Dictionary<string, ComplexSprite.Anim> Anims
         {
             get { return _anims; }
         }

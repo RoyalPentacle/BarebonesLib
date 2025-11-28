@@ -129,6 +129,13 @@ namespace Barebones.Asset
 
         private static List<Audio.Sound> _allSounds = new List<Audio.Sound>();
 
+        /// <summary>
+        /// The current size of the sound cache.
+        /// </summary>
+        public static long CacheSize
+        {
+            get { return _cacheSize; }
+        }
 
         /// <summary>
         /// Ask the handler to return a SoundEffect with a given name. If we don't have it, try to load it.

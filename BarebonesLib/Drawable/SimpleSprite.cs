@@ -14,7 +14,7 @@ namespace Barebones.Drawable
     /// <summary>
     /// A simple sprite object that offer colourization and scaling functions, but no animation.
     /// </summary>
-    public class SimpleSprite
+    public class SimpleSprite : BaseSprite
     {
         private protected struct Scale
         {
@@ -123,21 +123,14 @@ namespace Barebones.Drawable
             }
         }
 
-        private protected string _texturePath;
-
-        private protected Color _colour;
-
         private protected Scale _scale = new Scale();
 
         private protected float _rotation = 0f;
 
-        private protected Texture2D _texture;
-
-        private protected Rectangle _drawRec;
-
         private protected SpriteEffects _spriteEffect = SpriteEffects.None;
 
         private protected float _spriteDepth = 0.5f;
+
 
         #region Colourize Variables
         private protected struct ColorF
@@ -245,22 +238,6 @@ namespace Barebones.Drawable
         #endregion
 
         /// <summary>
-        /// The path of the texture loaded.
-        /// </summary>
-        public string TexturePath
-        {
-            get { return _texturePath; }
-        }
-
-        /// <summary>
-        /// The current colour of the sprite.
-        /// </summary>
-        public Color Colour
-        {
-            get { return _colour; }
-        }
-
-        /// <summary>
         /// The rotation of the sprite.
         /// Between -pi and pi
         /// </summary>
@@ -293,12 +270,13 @@ namespace Barebones.Drawable
         /// Also outputs that SpriteScript to be used by derived constructors.
         /// </summary>
         /// <param name="scriptPath">The path to the SpriteScript to load.</param>
-        /// <param name="script">The SpriteScript loaded.</param>
-        public SimpleSprite(string scriptPath, out SpriteScript script)
+        public SimpleSprite(string scriptPath, out SpriteScript spriteScript) : base(scriptPath, out SpriteScript script)
         {
-            script = ScriptFinder.FindScript<SpriteScript>(scriptPath);
-            _texturePath = script.TexturePath;
+            spriteScript = script;
+            _drawRec.Width = _texture.Width;
+            _drawRec.Height = _texture.Height;
         }
+
 
         #region Colour Functions
         private protected void UpdateColour()
@@ -395,18 +373,9 @@ namespace Barebones.Drawable
         #endregion
 
         /// <summary>
-        /// Unload the current sprite.
-        /// </summary>
-        public void UnloadSprite()
-        {
-            Textures.UnloadTexture(_texturePath);
-            _texture = null;
-        }
-
-        /// <summary>
         /// Update the sprite.
         /// </summary>
-        public virtual void UpdateSprite()
+        public override void UpdateSprite()
         {
             UpdateColour();
             UpdateScale();
@@ -416,7 +385,7 @@ namespace Barebones.Drawable
         /// Draw the sprite at a given position.
         /// </summary>
         /// <param name="position">The position to draw the sprite at.</param>
-        public virtual void DrawSprite(Vector2 position)
+        public override void DrawSprite(Vector2 position)
         {
             if (_texture != null)
             {

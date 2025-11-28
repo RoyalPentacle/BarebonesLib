@@ -1,4 +1,6 @@
-﻿using Barebones.Network;
+﻿using Barebones.Asset;
+using Barebones.Drawable.Particles;
+using Barebones.Network;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -63,6 +65,25 @@ namespace Barebones.Config
             _graphicsDevice = graphicsDevice;
         }
 
+        private static Game _game;
+
+        /// <summary>
+        /// Global pointer to the running game itself.
+        /// </summary>
+        public static Game Game
+        {
+            get { return _game; }
+        }
+
+        /// <summary>
+        /// Sets the global pointer to the running game.
+        /// </summary>
+        /// <param name="game"></param>
+        public static void SetGame(Game game)
+        {
+            _game = game;
+            SetGraphics(new GraphicsDeviceManager(game));
+        }
 
         private static long _textureCacheMaxSize = 16777216L;
 
@@ -224,6 +245,7 @@ namespace Barebones.Config
         {
             _gameTime = gameTime;
             _newKeyboardState = Keyboard.GetState();
+            ParticleHandler.Update();
         }
 
         /// <summary>
@@ -233,6 +255,8 @@ namespace Barebones.Config
         {
             Connections.UpdateNetwork();
             Asset.Sound.DisposeStoppedInstances();
+            ParticleHandler.AwaitSystems();
+            ShowStatus();
             _oldKeyboardState = _newKeyboardState;
         }
 
@@ -338,6 +362,27 @@ namespace Barebones.Config
             // Set the console variables based on the arguments. Always do it in this order.
             Verbose.SetConsoleOutputs(errorMajor, errorMinor, logMajor, logMinor);
             Verbose.SetSaveConsole(saveOutput);
+        }
+
+
+        private static int _updateNum = 0;
+        private static double _updateTime = 0;
+
+        internal static void ShowStatus()
+        {
+            if (Verbose.ShowConsole)
+            {
+                _updateNum++;
+                _updateTime += GameTime.ElapsedGameTime.TotalMilliseconds;
+                if (_updateNum >= 60)
+                {
+                    _updateNum = 0;
+                    float avg = (float)Math.Round((1000.0 / _updateTime) * 60.0, 1);
+                    _updateTime = 0.0;
+                    string status = $"{Game.Window.Title} - FPS: {avg} ScC: {ScriptFinder.CacheSize} TC: {Textures.CacheSize} SnC: {Sound.CacheSize} PS: {ParticleHandler.SystemCount} PP: {ParticleHandler.ParticleCount}";
+                    Console.Title = status;
+                }
+            }
         }
     }
 }

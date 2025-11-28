@@ -34,6 +34,7 @@ namespace Barebones
                 StreamWriter standardOutput = new StreamWriter(fileStream, encoding);
                 standardOutput.AutoFlush = true;
                 Console.SetOut(standardOutput);
+
             }
         }
     }

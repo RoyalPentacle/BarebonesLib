@@ -18,6 +18,14 @@ namespace Barebones.Asset
 
         private static long _cacheSize = 0L;
 
+        /// <summary>
+        /// The current size of the script cache.
+        /// </summary>
+        public static long CacheSize
+        {
+            get { return _cacheSize; }
+        }
+
         private static Mutex _mutex = new Mutex();
 
         /// <summary>
