@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Barebones.Config;
+using Barebones.Drawable;
+using System.Collections.Concurrent;
 
 namespace Barebones.Asset
 {
@@ -139,7 +141,10 @@ namespace Barebones.Asset
                 try // Attempt to load the specified texture
                 {
                     _fileSize = new FileInfo(texturePath).Length;
+                    Verbose.WriteLogMinor($"Loading: {texturePath}");
                     _texture = Texture2D.FromFile(Engine.Graphics.GraphicsDevice, texturePath);
+
+                    Verbose.WriteLogMinor($"Loaded!: {texturePath}");
                 }
                 catch (Exception ex) // But if we can't, use the fallback and print to console.
                 {
@@ -172,6 +177,8 @@ namespace Barebones.Asset
         
         private static Mutex _mutex = new Mutex();
 
+        private static ConcurrentQueue<Action> _asyncQueue = new ConcurrentQueue<Action>();
+
         /// <summary>
         /// The current size of the texture cache
         /// </summary>
@@ -202,7 +209,19 @@ namespace Barebones.Asset
             {
                 _mutex.ReleaseMutex();
             }
+        }
 
+        public static void GetTextureAsync(BaseSprite sprite)
+        {
+            _asyncQueue.Enqueue(sprite.GetTextureAsync);
+        }
+
+        internal static void LoadAsyncQueue()
+        {
+            while (_asyncQueue.TryDequeue(out Action result))
+            {
+                result.Invoke();
+            }
         }
 
         /// <summary>

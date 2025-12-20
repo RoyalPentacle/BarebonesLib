@@ -11,16 +11,20 @@ namespace Barebones.Drawable.Particles
     {
         private SimpleSprite _sprite;
 
-        public SimpleParticle(string scriptPath, Vector2 position, Vector2 velocity, double lifespan, Color color, ParticleFlags flags, ParticleSystem parentSystem) : base(position, velocity, lifespan, flags, parentSystem)
+        public SimpleParticle(string scriptPath, Vector2 position, Vector2 velocity, double lifespan, float rotation, float angularSpeed, Vector2 scale, float depth, Color color, ParticleFlags flags, ParticleSystem parentSystem) : base(position, velocity, lifespan, rotation, angularSpeed, flags, parentSystem)
         {
             _sprite = new SimpleSprite(scriptPath, out _);
             _sprite.SetColour(color);
+            _sprite.SetScale(scale);
+            _sprite.Rotation = rotation;
+            _sprite.SpriteDepth = depth;
         }
 
         public override void Update()
         {
             base.Update();
             _sprite.UpdateSprite();
+            _sprite.Rotation += _angularSpeed;
         }
         public override void Draw()
         {

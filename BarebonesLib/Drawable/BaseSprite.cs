@@ -56,9 +56,16 @@ namespace Barebones.Drawable
         {
             script = ScriptFinder.FindScript<SpriteScript>(scriptPath);
             _texturePath = script.TexturePath;
+            if (Engine.IsMainThread)
+                _texture = Textures.GetTexture(_texturePath);
+            else
+                Textures.GetTextureAsync(this);
+        }
+        
+        internal void GetTextureAsync()
+        {
             _texture = Textures.GetTexture(_texturePath);
         }
-
 
         /// <summary>
         /// Unload the current sprite.

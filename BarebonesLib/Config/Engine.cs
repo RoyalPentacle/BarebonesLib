@@ -85,6 +85,18 @@ namespace Barebones.Config
             SetGraphics(new GraphicsDeviceManager(game));
         }
 
+        private static Thread _mainThread;
+
+        public static Thread MainThread
+        {
+            get { return _mainThread; }
+        }
+
+        public static bool IsMainThread
+        {
+            get { return Thread.CurrentThread == _mainThread; }
+        }
+
         private static long _textureCacheMaxSize = 16777216L;
 
         /// <summary>
@@ -150,11 +162,19 @@ namespace Barebones.Config
         private static NLua.Lua _luaState;
         
         /// <summary>
-        /// The Lua State machine.
+        /// The Shared Synchronous Lua State machine.
         /// </summary>
-        public static NLua.Lua LuaState
+        public static NLua.Lua GlobalLua
         {
             get { return _luaState; }
+        }
+
+        public static float _particleMultiplier = 1.0f;
+
+        public static float ParticleMultiplier
+        {
+            get { return _particleMultiplier; }
+            set { _particleMultiplier = value; }
         }
 
         private static int _defaultUDPHostPort = 51234;
@@ -224,12 +244,13 @@ namespace Barebones.Config
         /// </summary>
         public static void Initialize()
         {
+            _mainThread = Thread.CurrentThread;
             _spriteBatch = new SpriteBatch(_graphicsDevice.GraphicsDevice);
             Asset.Textures.Shared.Init();
             Asset.Sound.Shared.Init();
             _luaState = new NLua.Lua();
             _luaState.LoadCLRPackage();
-            Lua.Script.RunScript(@"
+            Lua.Functions.RunScript(@"
                 import('Barebones', 'Barebones.Lua')
                 import('System.Threading')
                 function Wait(ms)
@@ -256,6 +277,7 @@ namespace Barebones.Config
             Connections.UpdateNetwork();
             Asset.Sound.DisposeStoppedInstances();
             ParticleHandler.AwaitSystems();
+            Textures.LoadAsyncQueue();
             ShowStatus();
             _oldKeyboardState = _newKeyboardState;
         }

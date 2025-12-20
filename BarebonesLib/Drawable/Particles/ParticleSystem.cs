@@ -38,6 +38,10 @@ namespace Barebones.Drawable.Particles
 
         private ISpatiallyObservable _monitorPosition;
 
+        private string? _luaScript;
+        
+        private bool _luaFinished = false;
+
         /// <summary>
         /// Constant forces to be applied to all particles in the system.
         /// </summary>
@@ -151,6 +155,7 @@ namespace Barebones.Drawable.Particles
             _forces = forces;
             _velocityMultiplier = velocityMultiplier;
             _random = new Random();
+            _luaScript = script.LuaScript;
             BuildLists(script);
             _particles = new List<Particle>();
             _thread = new Thread(Update);
@@ -175,6 +180,7 @@ namespace Barebones.Drawable.Particles
             _forces = forces;
             _velocityMultiplier = velocityMultiplier;
             _random = new Random();
+            _luaScript = script.LuaScript;
             BuildLists(script);
             _particles = new List<Particle>();
             _thread = new Thread(Update);
@@ -210,6 +216,7 @@ namespace Barebones.Drawable.Particles
         {
             ParticleHandler.ParticleBarrier.AddParticipant();
             _thread.Start();
+            
         }
 
         private void Update()

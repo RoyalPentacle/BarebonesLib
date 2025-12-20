@@ -319,7 +319,7 @@ namespace Barebones.Drawable
                 if (_currentAnimation != _animations[newAnim])
                 {
                     if (!_ignoreLua && _currentAnimation?.EndingLuaScript != null)
-                        Lua.Script.RunScript(_currentAnimation.EndingLuaScript);
+                        Lua.Functions.RunScript(_currentAnimation.EndingLuaScript);
 
                     _currentAnimation = _animations[newAnim];
                     _currentAnimName = newAnim; // Just for logging purposes.
@@ -327,7 +327,7 @@ namespace Barebones.Drawable
                     ChangeFrame(0, true);
 
                     if (!_ignoreLua && _currentAnimation.StartingLuaScript != null)
-                        Lua.Script.RunScript(_currentAnimation.StartingLuaScript);
+                        Lua.Functions.RunScript(_currentAnimation.StartingLuaScript);
                 }
             }
             catch (Exception ex)
@@ -353,18 +353,18 @@ namespace Barebones.Drawable
             if (forceLuaScript || _currentFrame != _currentAnimation.Frames[frameIndex])
             {
                 if (!_ignoreLua && _currentFrame?.EndingLuaScript != null)
-                    Lua.Script.RunScript(_currentFrame.EndingLuaScript);
+                    Lua.Functions.RunScript(_currentFrame.EndingLuaScript);
 
                 _currentFrame = _currentAnimation.Frames[frameIndex];
                 _currentFrameIndex = frameIndex;
                 _animTimer = 0;
 
                 if (!_ignoreLua && _currentFrame.StartingLuaScript != null)
-                    Lua.Script.RunScript(_currentFrame.StartingLuaScript);
+                    Lua.Functions.RunScript(_currentFrame.StartingLuaScript);
 
             }
-            _drawRec.Width = _currentFrame.Width;
-            _drawRec.Height = _currentFrame.Height;
+            _drawRec.Width = (int)(_currentFrame.Width * _scale.Width);
+            _drawRec.Height = (int)(_currentFrame.Height * _scale.Height);
         }
 
         private void UpdateAnimation()

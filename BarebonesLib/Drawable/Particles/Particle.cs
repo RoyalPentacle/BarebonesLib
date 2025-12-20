@@ -94,20 +94,24 @@ namespace Barebones.Drawable.Particles
         private protected Vector2 _position;
         private protected Vector2 _velocity;
         private protected Rectangle _collision;
+        private protected float _angularSpeed;
+        
+
         private protected ParticleFlags _flags;
 
         private protected double _timeToLive;
 
         private protected ParticleSystem _parentSystem;
 
-        internal Particle(Vector2 position, Vector2 velocity, double lifespan, ParticleFlags flags, ParticleSystem parentSystem)
+        internal Particle(Vector2 position, Vector2 velocity, double lifespan, float rotation, float angularSpeed, ParticleFlags flags, ParticleSystem parentSystem)
         {
             _position = position;
             _velocity = velocity;
             _timeToLive = lifespan;
+            _angularSpeed = angularSpeed;
             _flags = flags;
             _parentSystem = parentSystem;
-            _collision = new Rectangle((int)_position.X, (int)_position.Y, 2, 2);
+            _collision = new Rectangle((int)_position.X, (int)_position.Y, 0, 0);
         }
 
         /// <summary>

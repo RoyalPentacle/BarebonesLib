@@ -38,5 +38,17 @@ namespace Barebones.Asset.Scripts
         {
             get { return _attractors; }
         }
+
+        [JsonProperty]
+        private string? _luaScript = null;
+
+        /// <summary>
+        /// The lua script for this particle system, if applicable.
+        /// </summary>
+        [JsonIgnore]
+        public string? LuaScript
+        {
+            get { return _luaScript; }
+        }
     }
 }

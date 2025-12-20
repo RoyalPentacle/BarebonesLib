@@ -69,6 +69,24 @@ namespace Barebones.Drawable.Particles
         private double _angularSpeedBias;
 
         [JsonProperty]
+        private Vector2 _scaleBase;
+
+        [JsonProperty]
+        private Vector4 _scaleRange;
+
+        [JsonProperty]
+        private double _scaleBias;
+
+        [JsonProperty]
+        private float _depthBase;
+
+        [JsonProperty]
+        private Vector2 _depthRange;
+
+        [JsonProperty]
+        private double _depthBias;
+
+        [JsonProperty]
         private Color _baseColor;
 
         [JsonProperty]
@@ -79,6 +97,12 @@ namespace Barebones.Drawable.Particles
 
         [JsonProperty]
         private double _colorBias;
+
+        [JsonProperty]
+        private bool _randomFrame;
+
+        [JsonProperty]
+        private bool _fullRandomPos;
 
         [JsonProperty]
         private ParticleType _type;
@@ -205,6 +229,79 @@ namespace Barebones.Drawable.Particles
             get { return _lifespanBias; }
         }
 
+
+        [JsonIgnore]
+        public float BaseRotation
+        {
+            get { return _rotation; }
+        }
+
+        [JsonIgnore]
+        public Vector2 RotationRange
+        {
+            get { return _rotationRange; }
+        }
+
+        [JsonIgnore]
+        public double RotationBias
+        {
+            get { return _rotationBias; }
+        }
+
+        [JsonIgnore]
+        public float AngularSpeed
+        {
+            get { return _angularSpeed; }
+        }
+
+        [JsonIgnore]
+        public Vector2 AngularSpeedRange
+        {
+            get { return _angularSpeedRange; }
+        }
+
+        [JsonIgnore]
+        public double AngularSpeedBias
+        {
+            get { return _angularSpeedBias; }
+        }
+
+        [JsonIgnore]
+        public Vector2 ScaleBase
+        {
+            get { return _scaleBase; }
+        }
+
+        [JsonIgnore]
+        public Vector4 ScaleRange
+        {
+            get { return _scaleRange; }
+        }
+
+        [JsonIgnore]
+        public double ScaleBias
+        {
+            get { return _scaleBias; }
+        }
+
+        [JsonIgnore]
+        public float DepthBase
+        {
+            get { return _depthBase; }
+        }
+
+        [JsonIgnore]
+        public Vector2 DepthRange
+        {
+            get { return _depthRange; }
+        }
+
+        [JsonIgnore]
+        public double DepthBias
+        {
+            get { return _depthBias; }
+        }
+
         /// <summary>
         /// The base colour of every particle spawned.
         /// </summary>
@@ -239,6 +336,18 @@ namespace Barebones.Drawable.Particles
         public double ColorBias
         {
             get { return _colorBias; }
+        }
+
+        [JsonIgnore]
+        public bool RandomFrame
+        {
+            get { return _randomFrame; }
+        }
+
+        [JsonIgnore]
+        public bool FullRandomPos
+        {
+            get { return _fullRandomPos; }
         }
 
         /// <summary>
@@ -301,6 +410,30 @@ namespace Barebones.Drawable.Particles
 
         private double _lifespanBias;
 
+        private float _baseRotation;
+
+        private Vector2 _rotationRange;
+
+        private double _rotationBias;
+
+        private float _angularSpeed;
+
+        private Vector2 _angularSpeedRange;
+
+        private double _angularSpeedBias;
+
+        private Vector2 _scaleBase;
+
+        private Vector4 _scaleRange;
+
+        private double _scaleBias;
+
+        private float _depthBase;
+
+        private Vector2 _depthRange;
+
+        private double _depthBias;
+
         private Color _baseColor;
 
         private Color _minColor;
@@ -308,6 +441,10 @@ namespace Barebones.Drawable.Particles
         private Color _maxColor;
 
         private double _colorBias;
+
+        private bool _randomFrame;
+
+        private bool _fullRandomPos;
 
         private ParticleType _type;
 
@@ -340,10 +477,24 @@ namespace Barebones.Drawable.Particles
             _lifespan = pattern.Lifespan;
             _lifespanRange = pattern.LifespanRange;
             _lifespanBias = Math.Abs(pattern.LifespanBias);
+            _baseRotation = pattern.BaseRotation;
+            _rotationRange = pattern.RotationRange;
+            _rotationBias = Math.Abs(pattern.RotationBias);
+            _angularSpeed = pattern.AngularSpeed;
+            _angularSpeedRange = pattern.AngularSpeedRange;
+            _angularSpeedBias = Math.Abs(pattern.AngularSpeedBias);
+            _scaleBase = pattern.ScaleBase;
+            _scaleRange = pattern.ScaleRange;
+            _scaleBias = Math.Abs(pattern.ScaleBias);
+            _depthBase = pattern.DepthBase;
+            _depthRange = pattern.DepthRange;
+            _depthBias = Math.Abs(pattern.DepthBias);
             _baseColor = pattern.BaseColor;
             _minColor = pattern.MinColor;
             _maxColor = pattern.MaxColor;
             _colorBias = Math.Abs(pattern.ColorBias);
+            _randomFrame = pattern.RandomFrame;
+            _fullRandomPos = pattern.FullRandomPos;
             _type = pattern.Type;
             _flags = pattern.Flags;
             _spritePath = pattern.SpritePath;
@@ -351,26 +502,40 @@ namespace Barebones.Drawable.Particles
 
         private Vector2 GenerateBiasedVector2(Vector4 range, double bias)
         {
-            double cx = 0.5 * (range.X + range.Y);
-            double cy = 0.5 * (range.Z + range.W);
-            double hx = 0.5 * (range.Y - range.X);
-            double hy = 0.5 * (range.W - range.Z);
+            // Get the center of the horizontal and vertical ranges
+            double cHori = 0.5 * (range.X + range.Y);
+            double cVert = 0.5 * (range.Z + range.W);
 
+            // Get half the length of the horizontal and vertical ranges
+            double hHori = 0.5 * (range.Y - range.X);
+            double hVert = 0.5 * (range.W - range.Z);
+
+            // Get a random position on the edge of a circle, in radians.
             double theta = _parentRandom.NextDouble() * Math.PI * 2.0;
 
-            double u = _parentRandom.NextDouble();
-
+            // Get the cosine and sine of that random radian.
             double cos = Math.Cos(theta);
             double sin = Math.Sin(theta);
+            double x = cHori;
+            double y = cVert;
+            if (!_fullRandomPos)
+            {
+                double rMaxHori = Math.Abs(cos) < 1e-12 ? double.PositiveInfinity : hHori / Math.Abs(cos);
+                double rMaxVert = Math.Abs(sin) < 1e-12 ? double.PositiveInfinity : hVert / Math.Abs(sin);
+                double rMax = Math.Min(rMaxHori, rMaxVert);
 
-            double rMaxX = Math.Abs(cos) < 1e-12 ? double.PositiveInfinity : hx / Math.Abs(cos);
-            double rMaxY = Math.Abs(sin) < 1e-12 ? double.PositiveInfinity : hy / Math.Abs(sin);
-            double rMax = Math.Min(rMaxX, rMaxY);
-            double r = rMax * Math.Pow(u, bias);
+                double r = rMax * Math.Pow(_parentRandom.NextDouble(), bias);
 
-            double x = cx + r * cos;
-            double y = cy + r * sin;
-            return new Vector2((float)x, (float)y);
+
+                x = cHori + r * cos;
+                y = cVert + r * sin;
+            }
+            else
+            {
+                x += hHori * ((_parentRandom.NextDouble() * 2.0) - 1.0);
+                y += hVert * ((_parentRandom.NextDouble() * 2.0) - 1.0);
+            }
+            return new Vector2((float)x, (float)y);  
         }
 
         private double GenerateBiasedValue(Vector2 range, double bias)
@@ -412,6 +577,35 @@ namespace Barebones.Drawable.Particles
             return lifespan;
         }
 
+        private float GenerateNewParticleRotation()
+        {
+            float rotation = (float)GenerateBiasedValue(_rotationRange, _rotationBias);
+
+            rotation += _baseRotation;
+            return rotation;
+        }
+
+        private float GenerateNewParticleAngularSpeed()
+        {
+            float angularSpeed = (float)GenerateBiasedValue(_angularSpeedRange, _angularSpeedBias);
+            angularSpeed += _angularSpeed;
+            return angularSpeed;
+        }
+
+        private Vector2 GenerateNewParticleScale()
+        {
+            Vector2 scale = GenerateBiasedVector2(_scaleRange, _scaleBias);
+            scale += _scaleBase;
+            return scale;
+        }
+
+        private float GenerateNewParticleDepth()
+        {
+            float depth = (float)GenerateBiasedValue(_depthRange, _depthBias);
+            depth += _depthBase;
+            return depth;
+        }
+
         private Color GenerateNewParticleColor()
         {
             int r = (int)GenerateBiasedValue(new Vector2(-_minColor.R, _maxColor.R), _colorBias);
@@ -433,17 +627,17 @@ namespace Barebones.Drawable.Particles
         {
             if (_type == ParticleType.Point)
             {
-                PointParticle newParticle = new PointParticle(GenerateNewParticlePosition() + _parentSystem.Position, GenerateNewParticleVelocity(), GenerateNewParticleLifespan(), GenerateNewParticleColor(), _flags, _parentSystem);
+                PointParticle newParticle = new PointParticle(GenerateNewParticlePosition() + _parentSystem.Position, GenerateNewParticleVelocity(), GenerateNewParticleLifespan(), GenerateNewParticleRotation(), GenerateNewParticleAngularSpeed(), GenerateNewParticleScale(), GenerateNewParticleDepth(), GenerateNewParticleColor(), _flags, _parentSystem);
                 _parentSystem.AddParticle(newParticle);
             }
             else if (_type == ParticleType.Simple)
             {
-                SimpleParticle newParticle = new SimpleParticle(_spritePath, GenerateNewParticlePosition() + _parentSystem.Position, GenerateNewParticleVelocity(), GenerateNewParticleLifespan(), GenerateNewParticleColor(), _flags, _parentSystem);
+                SimpleParticle newParticle = new SimpleParticle(_spritePath, GenerateNewParticlePosition() + _parentSystem.Position, GenerateNewParticleVelocity(), GenerateNewParticleLifespan(), GenerateNewParticleRotation(), GenerateNewParticleAngularSpeed(), GenerateNewParticleScale(), GenerateNewParticleDepth(), GenerateNewParticleColor(), _flags, _parentSystem);
                 _parentSystem.AddParticle(newParticle);
             }
             else if (_type == ParticleType.Complex)
             {
-                ComplexParticle newParticle = new ComplexParticle(_spritePath, GenerateNewParticlePosition() + _parentSystem.Position, GenerateNewParticleVelocity(), GenerateNewParticleLifespan(), GenerateNewParticleColor(), _flags, _parentSystem);
+                ComplexParticle newParticle = new ComplexParticle(_spritePath, GenerateNewParticlePosition() + _parentSystem.Position, GenerateNewParticleVelocity(), GenerateNewParticleLifespan(), GenerateNewParticleRotation(), GenerateNewParticleAngularSpeed(), GenerateNewParticleScale(), GenerateNewParticleDepth(), GenerateNewParticleColor(), _randomFrame, _flags, _parentSystem);
                 _parentSystem.AddParticle(newParticle);
             }
         }
@@ -458,7 +652,8 @@ namespace Barebones.Drawable.Particles
             if (_currentTime > _spawnDelay)
             {
                 _currentTime -= _spawnDelay;
-                for (int i = 0; i < _spawnAmount; i++)
+                int amount = (int)Math.Ceiling(_spawnAmount * Engine.ParticleMultiplier);
+                for (int i = 0; i < amount; i++)
                 {
                     CreateParticle();
                 }

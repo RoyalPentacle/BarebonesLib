@@ -273,8 +273,7 @@ namespace Barebones.Drawable
         public SimpleSprite(string scriptPath, out SpriteScript spriteScript) : base(scriptPath, out SpriteScript script)
         {
             spriteScript = script;
-            _drawRec.Width = _texture.Width;
-            _drawRec.Height = _texture.Height;
+
         }
 
 
@@ -335,6 +334,11 @@ namespace Barebones.Drawable
             _scale.Height = height;
         }
 
+        public void SetScale(Vector2 scale)
+        {
+            SetScale(scale.X, scale.Y);
+        }
+
 
         /// <summary>
         /// Transition the sprite to the specified scale over the span of the specified milliseconds.
@@ -391,6 +395,8 @@ namespace Barebones.Drawable
             {
                 _drawRec.X = (int)position.X;
                 _drawRec.Y = (int)position.Y;
+                _drawRec.Width = _texture.Width;
+                _drawRec.Height = _texture.Height;
                 Engine.SpriteBatch.Draw(_texture, _drawRec, _texture.Bounds ,_colour, _rotation, _texture.Bounds.Center.ToVector2(), _spriteEffect, _spriteDepth);
             }
         }

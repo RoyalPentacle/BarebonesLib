@@ -4,6 +4,7 @@ using Barebones.Interfaces;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +19,7 @@ namespace Barebones.Drawable.Particles
     {
         private readonly static List<ParticleSystem> _particleSystems = new List<ParticleSystem>();
 
-        private readonly static Queue<ParticleSystem> _addParticleSystemQueue = new Queue<ParticleSystem>();
+        private readonly static ConcurrentQueue<ParticleSystem> _addParticleSystemQueue = new ConcurrentQueue<ParticleSystem>();
 
         private readonly static Barrier _particleBarrier = new Barrier(1);
 
