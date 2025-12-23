@@ -211,7 +211,7 @@ namespace Barebones.Drawable.Particles
         }
 
         /// <summary>
-        /// The possible variation of a particles lifespawn.
+        /// The possible variation of a particles lifespan.
         /// X/Y Min/Max variation.
         /// </summary>
         [JsonIgnore]
@@ -221,7 +221,7 @@ namespace Barebones.Drawable.Particles
         }
 
         /// <summary>
-        /// The bias of the random distribution of the lifespawn range.
+        /// The bias of the random distribution of the lifespan range.
         /// </summary>
         [JsonIgnore]
         public double LifespanBias
@@ -229,73 +229,113 @@ namespace Barebones.Drawable.Particles
             get { return _lifespanBias; }
         }
 
-
+        /// <summary>
+        /// The base rotation of every particle spawned. In radians.
+        /// </summary>
         [JsonIgnore]
         public float BaseRotation
         {
             get { return _rotation; }
         }
 
+        /// <summary>
+        /// The possible variation of a particles rotation.
+        /// X/Y Min/Max variation.
+        /// </summary>
         [JsonIgnore]
         public Vector2 RotationRange
         {
             get { return _rotationRange; }
         }
 
+        /// <summary>
+        /// The bias of the random distribution of the rotation range
+        /// </summary>
         [JsonIgnore]
         public double RotationBias
         {
             get { return _rotationBias; }
         }
 
+        /// <summary>
+        /// The base angular speed of all particles spawned.
+        /// </summary>
         [JsonIgnore]
         public float AngularSpeed
         {
             get { return _angularSpeed; }
         }
 
+        /// <summary>
+        /// The possible variation of a particles angular speed.
+        /// X/Y Min/Max variation.
+        /// </summary>
         [JsonIgnore]
         public Vector2 AngularSpeedRange
         {
             get { return _angularSpeedRange; }
         }
 
+        /// <summary>
+        /// The bias of the random distribution of angular speed.
+        /// </summary>
         [JsonIgnore]
         public double AngularSpeedBias
         {
             get { return _angularSpeedBias; }
         }
 
+        /// <summary>
+        /// The base scale of all particles spawned.
+        /// </summary>
         [JsonIgnore]
         public Vector2 ScaleBase
         {
             get { return _scaleBase; }
         }
 
+        /// <summary>
+        /// The possible variation of a particles scale.
+        /// X/Y Min/Max width.
+        /// Z/W Min/Max height.
+        /// </summary>
         [JsonIgnore]
         public Vector4 ScaleRange
         {
             get { return _scaleRange; }
         }
 
+        /// <summary>
+        /// The bias of the random distribution of the scale.
+        /// </summary>
         [JsonIgnore]
         public double ScaleBias
         {
             get { return _scaleBias; }
         }
 
+        /// <summary>
+        /// The base spritedepth of all particles spawned.
+        /// </summary>
         [JsonIgnore]
         public float DepthBase
         {
             get { return _depthBase; }
         }
 
+        /// <summary>
+        /// The possible variation of a particles spritedepth.
+        /// X/Y Min/Max variation.
+        /// </summary>
         [JsonIgnore]
         public Vector2 DepthRange
         {
             get { return _depthRange; }
         }
 
+        /// <summary>
+        /// The bias of the random distribution of the spritedepth.
+        /// </summary>
         [JsonIgnore]
         public double DepthBias
         {
@@ -338,12 +378,18 @@ namespace Barebones.Drawable.Particles
             get { return _colorBias; }
         }
 
+        /// <summary>
+        /// Should a particle pick a random frame to start on for its animation if it has one?
+        /// </summary>
         [JsonIgnore]
         public bool RandomFrame
         {
             get { return _randomFrame; }
         }
 
+        /// <summary>
+        /// Ignore positional bias and spawn randomly within the spawn area.
+        /// </summary>
         [JsonIgnore]
         public bool FullRandomPos
         {

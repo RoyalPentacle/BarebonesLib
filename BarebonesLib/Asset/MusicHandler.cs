@@ -53,7 +53,10 @@ namespace Barebones.Asset
         }
     }
 
-    internal class OggSong
+    /// <summary>
+    /// A music track to play in ogg vorbis format.
+    /// </summary>
+    public class OggSong
     {
 
         private TimeSpan _loopEnd;
@@ -70,6 +73,11 @@ namespace Barebones.Asset
 
         private VorbisReader _reader;
 
+        /// <summary>
+        /// Get and Set the volume of the music track.
+        /// Defaults to Engine.MusicVolume.
+        /// When set, multiplies the value by Engine.MusicVolume.
+        /// </summary>
         public float Volume
         {
             get
@@ -86,12 +94,19 @@ namespace Barebones.Asset
             }
         }
 
+        /// <summary>
+        /// Get and Set the Pitch of the music track.
+        /// </summary>
         public float Pitch
         {
             get { return _dynamicOgg.Pitch; }
             set { _dynamicOgg.Pitch = (float)Math.Clamp(value, -1.0, 1.0); }
         }
         
+        /// <summary>
+        /// Create a new OggSong from the specified music script.
+        /// </summary>
+        /// <param name="scriptPath">The path to the music script.</param>
         public OggSong(string scriptPath)
         {
             MusicScript script = ScriptFinder.FindScript<MusicScript>(scriptPath);
@@ -134,6 +149,9 @@ namespace Barebones.Asset
             return byteList.ToArray();
         }
 
+        /// <summary>
+        /// Play the OggSong.
+        /// </summary>
         public void Play()
         {
             _dynamicOgg.Pitch = 0;
@@ -141,6 +159,9 @@ namespace Barebones.Asset
             _dynamicOgg.Play();
         }
 
+        /// <summary>
+        /// Stop the OggSong.
+        /// </summary>
         public void Stop()
         {
             if (_dynamicOgg != null)
@@ -153,12 +174,19 @@ namespace Barebones.Asset
             }
         }
 
-
+        /// <summary>
+        /// Set the playhead of the OggSong.
+        /// </summary>
+        /// <param name="time">The TimeSpan to set the playhead to.</param>
         public void SetPlayHead(TimeSpan time)
         {
             _reader.TimePosition = time;
         }
 
+        /// <summary>
+        /// Get the current playhead of the OggSong
+        /// </summary>
+        /// <returns>A TimeSpan representing the current playhead position.</returns>
         public TimeSpan GetPlayHead()
         {
             return _reader.TimePosition;

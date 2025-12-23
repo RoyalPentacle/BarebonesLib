@@ -270,6 +270,7 @@ namespace Barebones.Drawable
         /// Also outputs that SpriteScript to be used by derived constructors.
         /// </summary>
         /// <param name="scriptPath">The path to the SpriteScript to load.</param>
+        /// <param name="spriteScript">The spriteScript loaded, for passing to inheritors.</param>
         public SimpleSprite(string scriptPath, out SpriteScript spriteScript) : base(scriptPath, out SpriteScript script)
         {
             spriteScript = script;
@@ -334,6 +335,10 @@ namespace Barebones.Drawable
             _scale.Height = height;
         }
 
+        /// <summary>
+        /// Instantly set the scale of the sprite, cancelling any active scaling over time.
+        /// </summary>
+        /// <param name="scale">The scalar as a Vector2.</param>
         public void SetScale(Vector2 scale)
         {
             SetScale(scale.X, scale.Y);

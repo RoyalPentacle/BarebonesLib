@@ -6,8 +6,15 @@ using System.Threading.Tasks;
 
 namespace Barebones.Lua
 {
+    /// <summary>
+    /// Contains functions for running Lua asynchronously.
+    /// </summary>
     public static class ThreadedLua
     {
+        /// <summary>
+        /// Runs a script in a fresh Lua machine asynchronously
+        /// </summary>
+        /// <param name="script">The lua script to run.</param>
         public static void RunScript(string script)
         {
 

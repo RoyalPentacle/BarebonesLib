@@ -97,11 +97,17 @@ namespace Barebones
 
         private static Thread _mainThread;
 
+        /// <summary>
+        /// The main thread the game is running on.
+        /// </summary>
         public static Thread MainThread
         {
             get { return _mainThread; }
         }
 
+        /// <summary>
+        /// Checks if the thread that called this function is the main thread or not.
+        /// </summary>
         public static bool IsMainThread
         {
             get { return Thread.CurrentThread == _mainThread; }
@@ -179,12 +185,16 @@ namespace Barebones
             get { return _luaState; }
         }
 
-        public static float _particleMultiplier = 1.0f;
+        private static float _particleMultiplier = 1.0f;
 
+        /// <summary>
+        /// Multiplies the number of spawned particles per ParticleGenerator spawn cycle by this number.
+        /// Cannot be below 0.
+        /// </summary>
         public static float ParticleMultiplier
         {
             get { return _particleMultiplier; }
-            set { _particleMultiplier = value; }
+            set { _particleMultiplier = Math.Max(0, value); }
         }
 
         private static int _defaultUDPHostPort = 51234;
@@ -250,16 +260,31 @@ namespace Barebones
         private static float _musicVolume = 1.0f;
         private static float _soundVolume = 1.0f;
 
+        /// <summary>
+        /// Gets and sets the master volume for all sound effects and music.
+        /// Clamped between 0.0f and 1.0f.
+        /// Internally is just a wrapper for SoundEffect.MasterVolume.
+        /// </summary>
         public static float MasterVolume
         {
             get { return SoundEffect.MasterVolume; }
             set { SoundEffect.MasterVolume = (float)Math.Clamp(value, 0.0, 1.0); }
         }
+
+        /// <summary>
+        /// Gets and sets the volume for all music.
+        /// Clamped between 0.0f and 1.0f.
+        /// </summary>
         public static float MusicVolume
         {
             get { return _musicVolume; }
             set { _musicVolume = (float)Math.Clamp(value, 0.0, 1.0); }
         }
+
+        /// <summary>
+        /// Gets and sets the volume for all sound effects.
+        /// Clamped between 0.0f and 1.0f.
+        /// </summary>
         public static float SoundVolume
         {
             get { return _soundVolume; }

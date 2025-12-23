@@ -33,6 +33,14 @@ namespace Barebones.Lua
             }
         }
 
+        /// <summary>
+        /// Create a particle system with the given arguments.
+        /// </summary>
+        /// <param name="scriptPath">The path to the particle script.</param>
+        /// <param name="posX">The X coordinate of the particle system.</param>
+        /// <param name="posY">The Y coordinate of the particle system.</param>
+        /// <param name="forceX">The constant force on the X axis to apply to the system.</param>
+        /// <param name="forceY">The constant force on the Y axis to apply to the system.</param>
         public static void CreateParticleSystem(string scriptPath, float posX, float posY, float forceX, float forceY)
         {
             ParticleHandler.AddParticleSystem(scriptPath, new Vector2(posX, posY), new Vector2(forceX, forceY));
