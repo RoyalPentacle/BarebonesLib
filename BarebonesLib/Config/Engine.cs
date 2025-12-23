@@ -2,6 +2,7 @@
 using Barebones.Drawable.Particles;
 using Barebones.Network;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLua;
@@ -9,16 +10,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Barebones.Config
+namespace Barebones
 {
     /// <summary>
     /// Various core Engine functions and properties.
     /// </summary>
     public static class Engine
     {
+
+        [DllImport("kernel32.dll", EntryPoint = "GetStdHandle", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        static extern IntPtr GetStdHandle(int nStdHandle);
+
+        [DllImport("kernel32.dll", EntryPoint = "AllocConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        static extern int AllocConsole();
+
+        const int STD_OUTPOUT_HANDLE = -11;
 
         internal const string LOGGING_PATH = "logs/";
 
@@ -237,10 +247,28 @@ namespace Barebones.Config
             get { return _newKeyboardState; }
         }
 
+        private static float _musicVolume = 1.0f;
+        private static float _soundVolume = 1.0f;
+
+        public static float MasterVolume
+        {
+            get { return SoundEffect.MasterVolume; }
+            set { SoundEffect.MasterVolume = (float)Math.Clamp(value, 0.0, 1.0); }
+        }
+        public static float MusicVolume
+        {
+            get { return _musicVolume; }
+            set { _musicVolume = (float)Math.Clamp(value, 0.0, 1.0); }
+        }
+        public static float SoundVolume
+        {
+            get { return _soundVolume; }
+            set { _soundVolume = (float)Math.Clamp(value, 0.0, 1.0); }
+        }
 
 
         /// <summary>
-        /// Initialize the Barebones engine for the given 
+        /// Initialize the Barebones engine
         /// </summary>
         public static void Initialize()
         {
@@ -276,6 +304,7 @@ namespace Barebones.Config
         {
             Connections.UpdateNetwork();
             Asset.Sound.DisposeStoppedInstances();
+            Music.DisposeStoppedInstances();
             ParticleHandler.AwaitSystems();
             Textures.LoadAsyncQueue();
             ShowStatus();
@@ -294,7 +323,7 @@ namespace Barebones.Config
         /// Checks the launch arguments and sets the appropriate settings.
         /// </summary>
         /// <param name="args">The launch arguments, passed in from the system.</param>
-        internal static void CheckLaunchArguments(string[] args)
+        public static void PreInitialize(string[] args)
         {
             // Default all the console outputs to false,
             bool errorMajor = false;
@@ -384,6 +413,18 @@ namespace Barebones.Config
             // Set the console variables based on the arguments. Always do it in this order.
             Verbose.SetConsoleOutputs(errorMajor, errorMinor, logMajor, logMinor);
             Verbose.SetSaveConsole(saveOutput);
+
+            if (Verbose.ShowConsole)
+            {
+                AllocConsole();
+                IntPtr stdHandle = GetStdHandle(STD_OUTPOUT_HANDLE);
+                Microsoft.Win32.SafeHandles.SafeFileHandle safeFileHandle = new Microsoft.Win32.SafeHandles.SafeFileHandle(stdHandle, true);
+                FileStream fileStream = new FileStream(safeFileHandle, FileAccess.Write);
+                System.Text.Encoding encoding = System.Text.Encoding.ASCII;
+                StreamWriter standardOutput = new StreamWriter(fileStream, encoding);
+                standardOutput.AutoFlush = true;
+                Console.SetOut(standardOutput);
+            }
         }
 
 

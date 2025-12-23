@@ -160,7 +160,7 @@ namespace Barebones.Drawable
                 return pos;
             }
         }
-
+        
         /// <summary>
         /// Contains a single animation for a Sprite
         /// </summary>
@@ -358,7 +358,7 @@ namespace Barebones.Drawable
                 _currentFrame = _currentAnimation.Frames[frameIndex];
                 _currentFrameIndex = frameIndex;
                 _animTimer = 0;
-
+                
                 if (!_ignoreLua && _currentFrame.StartingLuaScript != null)
                     Lua.Functions.RunScript(_currentFrame.StartingLuaScript);
 

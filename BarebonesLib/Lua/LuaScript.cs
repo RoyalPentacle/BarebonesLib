@@ -37,6 +37,6 @@ namespace Barebones.Lua
         {
             ParticleHandler.AddParticleSystem(scriptPath, new Vector2(posX, posY), new Vector2(forceX, forceY));
         }
-        public static void 
+
     }
 }

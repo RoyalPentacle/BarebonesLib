@@ -60,6 +60,7 @@ namespace Barebones.Drawable
                 _texture = Textures.GetTexture(_texturePath);
             else
                 Textures.GetTextureAsync(this);
+            
         }
         
         internal void GetTextureAsync()
