@@ -363,8 +363,8 @@ namespace Barebones.Drawable
                     Lua.Functions.RunScript(_currentFrame.StartingLuaScript);
 
             }
-            _drawRec.Width = (int)(_currentFrame.Width * _scale.Width);
-            _drawRec.Height = (int)(_currentFrame.Height * _scale.Height);
+            _cullRec.Width = (int)(_currentFrame.Width * _scale.Width) + 1;
+            _cullRec.Height = (int)(_currentFrame.Height * _scale.Height) + 1;
         }
 
         private void UpdateAnimation()
@@ -407,9 +407,10 @@ namespace Barebones.Drawable
         {
             if (_texture != null)
             {
-                _drawRec.X = (int)position.X;
-                _drawRec.Y = (int)position.Y;
-                Engine.SpriteBatch.Draw(_texture, _drawRec, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _spriteEffect, _spriteDepth);
+                _cullRec.X = (int)position.X - _cullRec.Width / 2;
+                _cullRec.Y = (int)position.Y - _cullRec.Height / 2 ;
+                if (_cullRec.Intersects(Engine.Camera.VisibleArea))
+                    Engine.SpriteBatch.Draw(_texture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
             }
         }
 

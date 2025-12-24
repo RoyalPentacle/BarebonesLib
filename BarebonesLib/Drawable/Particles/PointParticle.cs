@@ -15,6 +15,7 @@ namespace Barebones.Drawable.Particles
         private Texture2D _texture;
         private Color _color;
         private float _scale;
+        private Rectangle _cullRec;
         private float _rotation;
         private float _depth;
 
@@ -25,6 +26,7 @@ namespace Barebones.Drawable.Particles
             _rotation = rotation;
             _scale = scale.X;
             _depth = depth;
+            _cullRec = new Rectangle((int)position.X, (int)position.Y, (int)(_texture.Width * scale.X + 1), (int)(_texture.Height * scale.X + 1));
         }
 
 
@@ -32,11 +34,14 @@ namespace Barebones.Drawable.Particles
         {
             base.Update();
             _rotation += _angularSpeed;
+            _cullRec.X = (int)_position.X - _cullRec.Width / 2;
+            _cullRec.Y = (int)_position.Y - _cullRec.Height / 2;
         }
 
         public override void Draw()
         {
-            Engine.SpriteBatch.Draw(_texture, _position, null, _color, _rotation, Vector2.One, _scale, SpriteEffects.None, _depth);
+            if (_cullRec.Intersects(Engine.Camera.VisibleArea))
+                Engine.SpriteBatch.Draw(_texture, _position, null, _color, _rotation, Vector2.One, _scale, SpriteEffects.None, _depth);
         }
 
         public override void Unload()

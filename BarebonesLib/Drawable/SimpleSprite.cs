@@ -19,18 +19,15 @@ namespace Barebones.Drawable
         private protected struct Scale
         {
             // The scale of the width of the sprite.
-            private float _width;
-
-            // The scale of the height of the sprite.
-            private float _height;
+            private Vector2 _scale;
 
             /// <summary>
             /// The scale of the width of the sprite.
             /// </summary>
             public float Width
             {
-                get { return _width; }
-                set { _width = value; }
+                get { return _scale.X; }
+                set { _scale.X = value; }
             }
 
             /// <summary>
@@ -38,8 +35,13 @@ namespace Barebones.Drawable
             /// </summary>
             public float Height
             {
-                get { return _height; }
-                set { _height = value; }
+                get { return _scale.Y; }
+                set { _scale.Y = value; }
+            }
+
+            public Vector2 RawVector2
+            {
+                get { return _scale; }
             }
 
             /// <summary>
@@ -274,7 +276,6 @@ namespace Barebones.Drawable
         public SimpleSprite(string scriptPath, out SpriteScript spriteScript) : base(scriptPath, out SpriteScript script)
         {
             spriteScript = script;
-
         }
 
 
@@ -374,8 +375,8 @@ namespace Barebones.Drawable
                 else
                     _scale += _scalingDestinationScale;
 
-                _drawRec.Width = (int)(_texture.Width * _scale.Width);
-                _drawRec.Height = (int)(_texture.Height * _scale.Height);
+                _cullRec.Width = (int)(_texture.Width * _scale.Width) + 1;
+                _cullRec.Height = (int)(_texture.Height * _scale.Height) + 1;
             }
         }
 
@@ -398,11 +399,14 @@ namespace Barebones.Drawable
         {
             if (_texture != null)
             {
-                _drawRec.X = (int)position.X;
-                _drawRec.Y = (int)position.Y;
-                _drawRec.Width = _texture.Width;
-                _drawRec.Height = _texture.Height;
-                Engine.SpriteBatch.Draw(_texture, _drawRec, _texture.Bounds ,_colour, _rotation, _texture.Bounds.Center.ToVector2(), _spriteEffect, _spriteDepth);
+                
+
+                _cullRec.Width = (int)(_texture.Width * _scale.Width) + 1;
+                _cullRec.Height = (int)(_texture.Height * _scale.Height) + 1;
+                _cullRec.X = (int)position.X - _cullRec.Width / 2;
+                _cullRec.Y = (int)position.Y - _cullRec.Height / 2;
+                if (_cullRec.Intersects(Engine.Camera.VisibleArea))
+                    Engine.SpriteBatch.Draw(_texture, position, _texture.Bounds ,_colour, _rotation, _texture.Bounds.Center.ToVector2(), _scale.RawVector2, _spriteEffect, _spriteDepth);
             }
         }
     }

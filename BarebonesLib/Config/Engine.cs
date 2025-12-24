@@ -291,7 +291,13 @@ namespace Barebones
             set { _soundVolume = (float)Math.Clamp(value, 0.0, 1.0); }
         }
 
-
+        /// <summary>
+        /// The camera object for the game.
+        /// </summary>
+        public static Camera2D Camera
+        {
+            get { return Camera2D.Camera; }
+        }
         /// <summary>
         /// Initialize the Barebones engine
         /// </summary>
@@ -330,6 +336,7 @@ namespace Barebones
             Connections.UpdateNetwork();
             Asset.Sound.DisposeStoppedInstances();
             Music.DisposeStoppedInstances();
+            Camera.UpdateCamera();
             ParticleHandler.AwaitSystems();
             Textures.LoadAsyncQueue();
             ShowStatus();

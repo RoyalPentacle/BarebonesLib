@@ -211,7 +211,7 @@ namespace Barebones.Asset
             }
         }
 
-        public static void GetTextureAsync(BaseSprite sprite)
+        internal static void GetTextureAsync(BaseSprite sprite)
         {
             _asyncQueue.Enqueue(sprite.GetTextureAsync);
         }

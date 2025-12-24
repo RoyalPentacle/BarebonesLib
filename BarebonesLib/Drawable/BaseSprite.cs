@@ -23,7 +23,7 @@ namespace Barebones.Drawable
 
         private protected Texture2D _texture;
 
-        private protected Rectangle _drawRec;
+        private protected Rectangle _cullRec;
 
 
 
