@@ -1,4 +1,8 @@
 ﻿using Barebones.Config;
+using System.Collections.Concurrent;
+using System.ComponentModel.Design;
+using System.Reflection.Metadata;
+using System.Runtime.InteropServices;
 
 namespace Barebones
 {
@@ -7,15 +11,49 @@ namespace Barebones
     /// </summary>
     public static class Verbose
     {
+        [DllImport("kernel32.dll", EntryPoint = "GetStdHandle", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        static extern IntPtr GetStdHandle(int nStdHandle);
+
+        [DllImport("kernel32.dll", EntryPoint = "AllocConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        static extern int AllocConsole();
+
+        const int STD_OUTPOUT_HANDLE = -11;
+
+        private struct ConsoleMessage
+        {
+            public string Message;
+            public string Prefix;
+            public string TimeStamp;
+            public ConsoleColor Color;
+
+            public ConsoleMessage(string message, string timestamp, string prefix, ConsoleColor color)
+            {
+                Message = message; 
+                Prefix = prefix; 
+                TimeStamp = timestamp; 
+                Color = color;
+            }
+        }
+
         private static bool _showErrorMajor = false;
         private static bool _showErrorMinor = false;
         private static bool _showLogMajor = false;
         private static bool _showLogMinor = false;
 
         private static StreamWriter? _fileOutput;
-
+        private static string _input = "";
+        private static string _lastInput = "";
+        private static Thread _inputThread;
+        
+        private static readonly ConcurrentQueue<ConsoleMessage> _consoleOutput = new ConcurrentQueue<ConsoleMessage>();
 
         private static Mutex _mut = new Mutex();
+
+        private const ConsoleColor ERROR_MAJOR_COLOR = ConsoleColor.Red;
+        private const ConsoleColor ERROR_MINOR_COLOR = ConsoleColor.Yellow;
+        private const ConsoleColor LOG_MAJOR_COLOR = ConsoleColor.Green;
+        private const ConsoleColor LOG_MINOR_COLOR = ConsoleColor.Cyan;
+        private const ConsoleColor COMMAND_COLOR = ConsoleColor.Gray;
 
         /// <summary>
         /// Should the console be shown?
@@ -36,12 +74,102 @@ namespace Barebones
         /// <param name="errorMinor">Should the console show Minor Errors?</param>
         /// <param name="logMajor">Should the console show Major Logs?</param>
         /// <param name="logMinor">Should the console show Minor Logs?</param>
-        internal static void SetConsoleOutputs(bool errorMajor, bool errorMinor, bool logMajor, bool logMinor)
+        internal static void Initalize(bool errorMajor, bool errorMinor, bool logMajor, bool logMinor)
         {
             _showErrorMajor = errorMajor;
             _showErrorMinor = errorMinor;
             _showLogMajor = logMajor;
             _showLogMinor = logMinor;
+
+            if (ShowConsole)
+            {
+                AllocConsole();
+                IntPtr stdHandle = GetStdHandle(STD_OUTPOUT_HANDLE);
+                Microsoft.Win32.SafeHandles.SafeFileHandle safeFileHandle = new Microsoft.Win32.SafeHandles.SafeFileHandle(stdHandle, true);
+                FileStream fileStream = new FileStream(safeFileHandle, FileAccess.Write);
+                System.Text.Encoding encoding = System.Text.Encoding.ASCII;
+                StreamWriter standardOutput = new StreamWriter(fileStream, encoding);
+                standardOutput.AutoFlush = true;
+                Console.SetOut(standardOutput);
+                _inputThread = new Thread(ReadConsoleInput);
+                _inputThread.Start();
+            }
+        }
+        
+        internal static void ExecuteCommand()
+        {
+            WriteCommand(_input);
+            Lua.Functions.RunScript(_input);
+        }
+
+        internal static void ReadConsoleInput()
+        {
+            while (true)
+            {
+                ConsoleKeyInfo input = Console.ReadKey(true);
+                if (input.Key == ConsoleKey.Enter)
+                {
+                    ExecuteCommand();
+                    _lastInput = _input;
+                    _input = "";
+                }
+                else if (input.Key == ConsoleKey.UpArrow)
+                {
+                    string temp = _input;
+                    _input = _lastInput;
+                    _lastInput = temp;
+                    _mut.WaitOne();
+                    RefreshInput();
+                    _mut.ReleaseMutex();
+                }
+                else if (input.Key == ConsoleKey.Backspace)
+                {
+                    if (_input != "")
+                    {
+                        _input = _input.Remove(_input.Length - 1);
+                        _mut.WaitOne();
+                        RefreshInput();
+                        _mut.ReleaseMutex();
+                    }
+                }
+                else
+                {
+                    if (input.KeyChar != '\u0000')
+                    {
+                        char command = input.KeyChar;
+                        _input += command;
+                        _mut.WaitOne();
+                        RefreshInput();
+                        _mut.ReleaseMutex();
+                    }
+                }
+            }
+        }
+
+        internal static void RefreshInput()
+        {
+            // TODO: If the user types so many characters that it wordwraps, this fails horribly.
+            Console.CursorLeft = 0;
+            Console.Write(new string(' ', Console.WindowWidth - 1));
+            Console.CursorLeft = 0;
+            Console.Write(_input);
+        }
+
+        internal static void PrintConsoleOutput()
+        {
+            _mut.WaitOne();
+            if (_consoleOutput.Count > 0)
+            {
+                while (_consoleOutput.TryDequeue(out ConsoleMessage msg))
+                {
+                    Console.CursorLeft = 0;
+                    Console.Write(new string(' ', Console.WindowWidth - 1));
+                    Console.CursorLeft = 0;
+                    WriteLog(msg.Message, msg.TimeStamp, msg.Prefix, msg.Color);
+                }
+                RefreshInput();
+            }
+            _mut.ReleaseMutex();
         }
 
         /// <summary>
@@ -61,9 +189,10 @@ namespace Barebones
         /// <summary>
         /// Close the filestream of the console output.
         /// </summary>
-        internal static void CloseFilestream()
+        internal static void Close()
         {
             _fileOutput?.Close();
+            // Stop the input thread, somehow.
         }
 
         /// <summary>
@@ -73,18 +202,7 @@ namespace Barebones
         public static void WriteErrorMajor(string message)
         {
             if (_showErrorMajor)
-            {
-                _mut.WaitOne();
-                string time = GetTimestamp();
-                string output = $" !!MAJOR ERROR!!: {message}";
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write(time);
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(output);
-                _fileOutput?.Write(time);
-                _fileOutput?.WriteLine(output);
-                _mut.ReleaseMutex();
-            }
+                _consoleOutput.Enqueue(new ConsoleMessage(message, GetTimestamp(), "!!MAJOR ERROR!!", ERROR_MAJOR_COLOR));
         }
 
         /// <summary>
@@ -94,18 +212,7 @@ namespace Barebones
         public static void WriteErrorMinor(string message)
         {
             if (_showErrorMinor)
-            {
-                _mut.WaitOne();
-                string time = GetTimestamp();
-                string output = $" !MINOR ERROR!: {message}";
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write(time);
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(output);
-                _fileOutput?.Write(time);
-                _fileOutput?.WriteLine(output);
-                _mut.ReleaseMutex();
-            }
+                _consoleOutput.Enqueue(new ConsoleMessage(message, GetTimestamp(), "!MINOR ERROR!", ERROR_MINOR_COLOR));
         }
 
         /// <summary>
@@ -115,18 +222,7 @@ namespace Barebones
         public static void WriteLogMajor(string message)
         {
             if (_showLogMajor)
-            {
-                _mut.WaitOne();
-                string time = GetTimestamp();
-                string output = $" MAJOR Log: {message}";
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write(time);
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(output);
-                _fileOutput?.Write(time);
-                _fileOutput?.WriteLine(output);
-                _mut.ReleaseMutex();
-            }
+                _consoleOutput.Enqueue(new ConsoleMessage(message, GetTimestamp(), "MAJOR Log", LOG_MAJOR_COLOR));
         }
 
         /// <summary>
@@ -136,23 +232,47 @@ namespace Barebones
         public static void WriteLogMinor(string message)
         {
             if (_showLogMinor)
-            {
-                _mut.WaitOne();
-                string time = GetTimestamp();
-                string output = $" MINOR Log: {message}";
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write(time);
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine(output);
-                _fileOutput?.Write(time);
-                _fileOutput?.WriteLine(output);
-                _mut.ReleaseMutex();
-            }
+                _consoleOutput.Enqueue(new ConsoleMessage(message, GetTimestamp(), "MINOR Log", LOG_MINOR_COLOR));
         }
 
-        private static string GetTimestamp()
+        /// <summary>
+        /// Write a command message to the console, if enabled.
+        /// Typically this is done only by the console itself when the user enters a command.
+        /// </summary>
+        /// <param name="message">The message to write.</param>
+        public static void WriteCommand(string message)
+        {
+            _consoleOutput.Enqueue(new ConsoleMessage(message, GetTimestamp(), "Command", COMMAND_COLOR));
+        }
+
+        /// <summary>
+        /// Gets the current timestamp as a formatted string.
+        /// </summary>
+        /// <returns>A string timestamp in the format of HH:mm:ss:fff</returns>
+        public static string GetTimestamp()
         {
             return $"{DateTime.Now:HH:mm:ss:fff}";
+        }
+
+        /// <summary>
+        /// Writes a message to the console.
+        /// Used internally by the various WriteError/Log functions, but exposed for extension.
+        /// </summary>
+        /// <param name="message">The message to print.</param>
+        /// <param name="timestamp">The timestamp of the message.</param>
+        /// <param name="prefix">The prefix of the message.</param>
+        /// <param name="color">The color the message should be.</param>
+        public static void WriteLog(string message, string timestamp, string prefix, ConsoleColor color)
+        {
+            string time = GetTimestamp();
+            string output = $" {prefix}: {message}";
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(timestamp);
+            Console.ForegroundColor = color;
+            Console.WriteLine(output);
+            _fileOutput?.Write(timestamp);
+            _fileOutput?.WriteLine(output);
+            Console.ForegroundColor = ConsoleColor.White;
         }
     }
 }

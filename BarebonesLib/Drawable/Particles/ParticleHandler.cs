@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Barebones.Drawable.Particles
 {
@@ -22,6 +23,13 @@ namespace Barebones.Drawable.Particles
         private readonly static ConcurrentQueue<ParticleSystem> _addParticleSystemQueue = new ConcurrentQueue<ParticleSystem>();
 
         private readonly static Barrier _particleBarrier = new Barrier(1);
+
+        private static bool _isClosing = false;
+
+        internal static bool IsClosing
+        { 
+            get { return _isClosing; } 
+        }
 
         /// <summary>
         /// A list of all current particle systems.
@@ -62,6 +70,11 @@ namespace Barebones.Drawable.Particles
                 }
                 return count;
             }
+        }
+
+        internal static void Close()
+        {
+            _isClosing = true;
         }
 
         internal static void Update()
