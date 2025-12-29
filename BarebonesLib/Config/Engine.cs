@@ -445,8 +445,6 @@ namespace Barebones
 
 
         private static int _updateNum = 0;
-        private static double _updateTime = 0;
-
         internal static void ShowStatus()
         {
             if (Verbose.ShowConsole)

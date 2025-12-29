@@ -32,7 +32,7 @@ namespace Barebones
 
         /// <summary>
         /// The zoom level of the camera.
-        /// Clamped between 0f and 2.0f, values above 2.0f currently causes rendering issues.
+        /// If set to negative, this will invert the game space.
         /// Also updates the transformation matrix when set.
         /// </summary>
         public float Zoom
@@ -40,7 +40,7 @@ namespace Barebones
             get { return _zoom; }
             set 
             {
-                _zoom = value;//Math.Clamp(value, 0f, 2.0f);
+                _zoom = value;
                 UpdateMatrix();
             }
         }

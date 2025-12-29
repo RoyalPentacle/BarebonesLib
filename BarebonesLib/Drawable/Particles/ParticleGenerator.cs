@@ -611,6 +611,10 @@ namespace Barebones.Drawable.Particles
             Vector2 velocity = GenerateBiasedVector2(_velocityRange, _velocityBias);
             velocity += _baseVelocity;
             velocity *= _parentSystem.VelocityMultiplier;
+            if (_parentSystem.AttachMonitor != null && _parentSystem.AttachMonitor.InheritRotation)
+            {
+                velocity = Vector2.Transform(velocity, Matrix.CreateRotationZ(_parentSystem.AttachMonitor.Rotation));
+            }
             return velocity;
         }
 

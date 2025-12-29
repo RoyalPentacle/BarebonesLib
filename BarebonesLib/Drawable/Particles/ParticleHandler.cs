@@ -129,6 +129,11 @@ namespace Barebones.Drawable.Particles
             _addParticleSystemQueue.Enqueue(new ParticleSystem(scriptPath, position, forces, velocityMultiplier, monitorSprite));
         }
 
+        public static void AddParticleSystem(string scriptPath, AttachPointMonitor monitor, Vector2 forces, Vector2 velocityMultiplier, ComplexSprite? monitorSprite)
+        {
+            _addParticleSystemQueue.Enqueue(new ParticleSystem(scriptPath, monitor, forces, velocityMultiplier, monitorSprite));
+        }
+
         /// <summary>
         /// Add a new particle system with a specified ParticleScript bound to a specified ISpatiallyObservable with specified constant Forces, with a multiplier for starting velocities.
         /// Additionally, monitors a specified ComplexSprite and mimics its animation state and SpriteEffects.

@@ -38,6 +38,13 @@ namespace Barebones.Drawable.Particles
 
         private ISpatiallyObservable _monitorPosition;
 
+        private AttachPointMonitor? _attachPointMonitor;
+
+        public AttachPointMonitor? AttachMonitor
+        {
+            get { return _attachPointMonitor; }
+        }
+
         private string? _luaScript;
         
         private bool _luaFinished = false;
@@ -162,6 +169,21 @@ namespace Barebones.Drawable.Particles
             _monitorSprite = monitorSprite;
         }
 
+        public ParticleSystem(string scriptPath, AttachPointMonitor monitor, Vector2 forces, Vector2 velocityMultiplier, ComplexSprite? monitorSprite)
+        {
+            ParticleScript script = ScriptFinder.FindScript<ParticleScript>(scriptPath);
+            _position = monitor.Position;
+            _attachPointMonitor = monitor;
+            _forces = forces;
+            _velocityMultiplier = velocityMultiplier;
+            _random = new Random();
+            _luaScript = script.LuaScript;
+            BuildLists(script);
+            _particles = new List<Particle>();
+            _thread = new Thread(Update);
+            _monitorSprite = monitorSprite;
+        }
+
         /// <summary>
         /// Create a new ParticleSystem from the ParticleScript at the specified path, bound to a specified ISpatiallyObservable and with given constant forces.
         /// Additionally with a multiplier for the starting velocity of all particles in the system.
@@ -226,6 +248,10 @@ namespace Barebones.Drawable.Particles
                 ParticleHandler.ParticleBarrier.SignalAndWait();
                 if (_monitorPosition != null)
                     _position = _monitorPosition.Position;
+                else if (_attachPointMonitor != null)
+                {
+                    _position = _attachPointMonitor.Position;
+                }
                 if (_particles.Count == 0 && _generators.Count == 0)
                 {
                     ParticleHandler.ParticleSystems.Remove(this);

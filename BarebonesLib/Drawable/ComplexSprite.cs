@@ -152,12 +152,13 @@ namespace Barebones.Drawable
             /// Gets an attachpoint with a given name.
             /// </summary>
             /// <param name="name">The attachpoint to find.</param>
+            /// <param name="pos">The position of the attachpoint.</param>
             /// <returns>The position of the attach point.</returns>
-            public Vector2 GetAttachPoint(string name)
+            public bool TryGetAttachPoint(string name, out Vector2 pos)
             {
-                Vector2 pos = Vector2.Zero;
-                _attachPoints.TryGetValue(name, out pos);
-                return pos;
+                pos = Vector2.Zero;
+                return _attachPoints.TryGetValue(name, out pos);
+
             }
         }
         
@@ -217,6 +218,8 @@ namespace Barebones.Drawable
 
         private Dictionary<string, Anim> _animations;
 
+        private Vector2 _lastPosition;
+
         private Anim _currentAnimation;
 
         private string _currentAnimName;
@@ -232,6 +235,14 @@ namespace Barebones.Drawable
         private string _nextAnim = "";
 
         private bool _ignoreLua = false;
+
+        /// <summary>
+        /// The last position this sprite was drawn to.
+        /// </summary>
+        public Vector2 LastPosition
+        {
+            get { return _lastPosition; }
+        }
 
         /// <summary>
         /// The collection of animations for this sprite.
@@ -333,7 +344,6 @@ namespace Barebones.Drawable
                     _currentAnimName = newAnim; // Just for logging purposes.
                     _nextAnim = nextAnim;
                     ChangeFrame(0, true);
-
                     if (!_ignoreLua && _currentAnimation.StartingLuaScript != null)
                         Lua.Functions.RunScript(_currentAnimation.StartingLuaScript);
                 }
@@ -395,7 +405,7 @@ namespace Barebones.Drawable
         }
         #endregion
 
-        
+        private float _addRot;
         /// <summary>
         /// Update the sprite.
         /// </summary>
@@ -417,6 +427,7 @@ namespace Barebones.Drawable
             {
                 _cullRec.X = (int)position.X - _cullRec.Width / 2;
                 _cullRec.Y = (int)position.Y - _cullRec.Height / 2 ;
+                _lastPosition = position;
                 if (_cullRec.Intersects(Engine.Camera.VisibleArea))
                     Engine.SpriteBatch.Draw(_texture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
             }
