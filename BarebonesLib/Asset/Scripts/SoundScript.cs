@@ -23,5 +23,13 @@ namespace Barebones.Asset.Scripts
         {
             get { return _soundPath; }
         }
+
+        /// <summary>
+        /// Creates an empty SoundScript for fallback purposes.
+        /// </summary>
+        public SoundScript()
+        {
+            _soundPath = "fallback";
+        }
     }
 }

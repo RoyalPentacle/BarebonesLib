@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Audio;
+﻿using Barebones.Asset.Scripts;
+using Microsoft.Xna.Framework.Audio;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,10 +18,12 @@ namespace Barebones.Asset.Audio
             get { return _instance.State == SoundState.Playing; }
         }
 
-        internal Sound(SoundEffect soundEffect, string soundPath)
+        internal Sound(string scriptPath)
         {
+            SoundScript script = ScriptFinder.FindScript<SoundScript>(scriptPath);
+            SoundEffect soundEffect = Asset.Sound.GetSound(script.SoundPath);
             _instance = soundEffect.CreateInstance();
-            _soundPath = soundPath;
+            _soundPath = script.SoundPath;
             Asset.Sound.DeclareSoundInstance(this);
             _instance.Play();
         }

@@ -5,6 +5,9 @@ namespace Barebones.Asset.Scripts
     /// <summary>
     /// The base class for all scripts.
     /// </summary>
+    /// <remarks>
+    /// Inherit this for your own custom script objects, but ensure you have a public constructor for the script that creates a fallback state should the <see cref="ScriptFinder"/> fail to find the script.
+    /// </remarks>
     public abstract class Script
     {
         [JsonIgnore]

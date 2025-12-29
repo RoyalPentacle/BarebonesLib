@@ -118,9 +118,9 @@ namespace Barebones.Drawable
             /// </summary>
             public Frame()
             {
-                _sourceRec = new Rectangle(0, 0, 128, 128);
+                _sourceRec = new Rectangle(0, 0, 32, 32);
                 _speed = 1000f;
-                _origin = new Vector2(0, 0);
+                _origin = new Vector2(16, 16);
                 _attachPoints = new Dictionary<string, Vector2>();
                 _attachPoints.Add("DUMMY", new Vector2(0, 0));
             }
@@ -208,6 +208,8 @@ namespace Barebones.Drawable
             /// </summary>
             public void AddFrame(Frame frame)
             {
+                if (_frames == null)
+                    _frames = new List<Frame>();
                 _frames.Add(frame);
             }
 
@@ -292,8 +294,14 @@ namespace Barebones.Drawable
         {
             _ignoreLua = ignoreLua;
             _animations = script.Anims;
-            _colour = Color.White;
+            if (_animations.Count == 0)
+            {
+                Anim fallback = new Anim();
+                fallback.AddFrame(new Frame(new Rectangle(0, 0, _texture.Width, _texture.Height), 1000f, new Vector2(_texture.Width / 2, _texture.Height / 2)));
+                _animations.Add("IDLE", fallback);
+            }
             ChangeAnimation(script.DefaultAnim);
+            _colour = Color.White;
         }
 
         #region Animation Functions

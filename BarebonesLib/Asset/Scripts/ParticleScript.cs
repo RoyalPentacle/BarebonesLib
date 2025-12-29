@@ -50,5 +50,15 @@ namespace Barebones.Asset.Scripts
         {
             get { return _luaScript; }
         }
+
+        /// <summary>
+        /// Creates an empty ParticleScript for fallback purposes.
+        /// </summary>
+        public ParticleScript()
+        {
+            _generators = null;
+            _attractors = null;
+            _luaScript = null;
+        }
     }
 }

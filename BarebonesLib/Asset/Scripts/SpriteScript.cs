@@ -47,6 +47,14 @@ namespace Barebones.Asset.Scripts
         {
             get { return _anims; }
         }
+
+        /// <summary>
+        /// Creates an empty SpriteScript for fallback purposes.
+        /// </summary>
+        public SpriteScript()
+        {
+            _texturePath = "fallback";
+            _defaultAnim = "IDLE";
+        }
     }
 }
-

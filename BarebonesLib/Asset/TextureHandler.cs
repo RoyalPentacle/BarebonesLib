@@ -141,15 +141,14 @@ namespace Barebones.Asset
                 try // Attempt to load the specified texture
                 {
                     _fileSize = new FileInfo(texturePath).Length;
-                    Verbose.WriteLogMinor($"Loading: {texturePath}");
                     _texture = Texture2D.FromFile(Engine.Graphics.GraphicsDevice, texturePath);
-
                     Verbose.WriteLogMinor($"Loaded!: {texturePath}");
                 }
                 catch (Exception ex) // But if we can't, use the fallback and print to console.
                 {
                     _texture = Shared.FallbackTexture;
-                    Verbose.WriteErrorMajor($"TEXTURE: Error loading file at: {texturePath}\n Loading fallback texture. EX: {ex.Message}");
+                    if (texturePath != "fallback")
+                        Verbose.WriteErrorMajor($"TEXTURE: Error loading file at: {texturePath}\n Loading fallback texture. EX: {ex.Message}");
                 }
 
                 _count = 1; // A brand new texture is being used by one thing.

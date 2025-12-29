@@ -23,7 +23,7 @@ namespace Barebones.Asset
         {
             _song?.Stop();
             _song = new OggSong(musicScript);
-            _song.Play();
+            _song?.Play();
         }
 
         /// <summary>
@@ -110,7 +110,17 @@ namespace Barebones.Asset
         public OggSong(string scriptPath)
         {
             MusicScript script = ScriptFinder.FindScript<MusicScript>(scriptPath);
-            _reader = new VorbisReader(script.MusicPath);
+            try
+            {
+                _reader = new VorbisReader(script.MusicPath);
+            }
+            catch (Exception e)
+            {
+                _reader = null;
+                if (script.MusicPath != "fallback")
+                    Verbose.WriteErrorMajor($"Failed to load music: {script.MusicPath}\n Ex: {e.Message}");
+                return;
+            }
             _channels = _reader.Channels;
             _sampleRate = _reader.SampleRate;
 
@@ -121,6 +131,7 @@ namespace Barebones.Asset
 
             _handler = new EventHandler<EventArgs>(UpdateBuffer);
             _dynamicOgg.BufferNeeded += _handler;
+            
         }
 
         private byte[] ReadOgg()
@@ -154,9 +165,12 @@ namespace Barebones.Asset
         /// </summary>
         public void Play()
         {
-            _dynamicOgg.Pitch = 0;
-            _dynamicOgg.Volume = Engine.MusicVolume;
-            _dynamicOgg.Play();
+            if (_reader != null)
+            {
+                _dynamicOgg.Pitch = 0;
+                _dynamicOgg.Volume = Engine.MusicVolume;
+                _dynamicOgg.Play();
+            }
         }
 
         /// <summary>

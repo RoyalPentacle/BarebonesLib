@@ -29,18 +29,32 @@ namespace Barebones.Lua
             // Do some logic here to sanitize the script depending on the allowGlobal variable, either making it a local function, or just a normal one.
             try
             {
-                try
+                Engine.GlobalLua.DoString(luaScript);
+            }
+            catch (NLua.Exceptions.LuaException e)
+            {
+                Verbose.WriteErrorMajor($"LUA: Failed to execute script!\n Ex: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Run the lua script from the specified file.
+        /// </summary>
+        /// <param name="path">The path to the file.</param>
+        public static void RunFile(string path)
+        {
+            try
+            {
+                using (StreamReader sr = new StreamReader(path))
                 {
-                    Engine.GlobalLua.DoString(luaScript);
-                }
-                catch (NLua.Exceptions.LuaException e)
-                {
-                    Verbose.WriteErrorMajor($"LUA: Failed to execute script!\n Ex: {e.Message}");
+                    string script = sr.ReadToEnd();
+                    sr.Close();
+                    Engine.GlobalLua.DoString(script);
                 }
             }
-            catch (Exception ex)
+            catch (NLua.Exceptions.LuaException e)
             {
-                Verbose.WriteErrorMajor($"LUA: Failed to execute script!\n Ex: {ex.Message}");
+                Verbose.WriteErrorMajor($"LUA: Failed to execute script!\n Ex: {e.Message}");
             }
         }
 
@@ -50,8 +64,7 @@ namespace Barebones.Lua
         /// <param name="scriptPath"></param>
         public static void PlaySound(string scriptPath)
         {
-            SoundScript soundScript = ScriptFinder.FindScript<SoundScript>(scriptPath);
-            Asset.Sound.PlaySound(soundScript.SoundPath);
+            Asset.Sound.PlaySound(scriptPath);
         }
 
         /// <summary>
@@ -99,6 +112,41 @@ namespace Barebones.Lua
                         lua.Dispose();
                     }
                 } catch (NLua.Exceptions.LuaException e)
+                {
+                    Verbose.WriteErrorMajor($"LUA: Failed to execute script!\n Ex: {e.Message}");
+                }
+            });
+        }
+
+        /// <summary>
+        /// Run the lua script from the specified file, asynchronously.
+        /// </summary>
+        /// <param name="path">The path to the file.</param>
+        public static void RunFile(string path)
+        {
+            Task.Run(() => {
+                try
+                {
+                    using (StreamReader sr = new StreamReader(path))
+                    {
+                        string script = sr.ReadToEnd();
+                        sr.Close();
+                        using (var lua = new NLua.Lua())
+                        {
+                            lua.LoadCLRPackage();
+                            lua.DoString(@"
+                            import('Barebones', 'Barebones.Lua')
+                            import('System.Threading')
+                            function Wait(ms)
+                                Thread.Sleep(ms)
+                            end
+                            ");
+                            lua.DoString(script);
+                            lua.Dispose();
+                        }
+                    }
+                }
+                catch (NLua.Exceptions.LuaException e)
                 {
                     Verbose.WriteErrorMajor($"LUA: Failed to execute script!\n Ex: {e.Message}");
                 }

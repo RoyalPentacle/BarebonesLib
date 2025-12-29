@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Audio;
 using Barebones.Config;
+using Barebones.Asset.Scripts;
 
 namespace Barebones.Asset
 {
@@ -100,7 +101,8 @@ namespace Barebones.Asset
                 catch (Exception ex) // But if we can't, do nothing and print an error.
                 {
                     _soundEffect = Shared.FallbackSound;
-                    Verbose.WriteErrorMajor($"SOUND: Error loading file at: {soundPath}\n EX: {ex.Message}");
+                    if (soundPath != "fallback")
+                        Verbose.WriteErrorMajor($"SOUND: Error loading file at: {soundPath}\n EX: {ex.Message}");
                 }
 
                 _count = 1; // A brand new sound is being used by one thing.
@@ -273,11 +275,10 @@ namespace Barebones.Asset
         /// <summary>
         /// Play the sound found at the specified path.
         /// </summary>
-        /// <param name="soundPath">The path to the sound.</param>
-        public static void PlaySound(string soundPath)
+        /// <param name="scriptPath">The path to the sound.</param>
+        public static void PlaySound(string scriptPath)
         {
-            SoundEffect soundEffect = GetSound(soundPath);
-            Audio.Sound sound = new Audio.Sound(soundEffect, soundPath);
+            Audio.Sound sound = new Audio.Sound(scriptPath);
         }
     }
 }

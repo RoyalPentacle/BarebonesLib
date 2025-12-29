@@ -39,8 +39,8 @@ namespace Barebones
         {
             get { return _zoom; }
             set 
-            { 
-                _zoom = Math.Clamp(value, 0f, 2.0f);
+            {
+                _zoom = value;//Math.Clamp(value, 0f, 2.0f);
                 UpdateMatrix();
             }
         }
@@ -125,7 +125,7 @@ namespace Barebones
 
         private void UpdateMatrix()
         {
-            _transform = Matrix.CreateTranslation(new Vector3(-_position.X, -_position.Y, 0)) * Matrix.CreateScale(_zoom) * Matrix.CreateTranslation(new Vector3(Bounds.Width * 0.5f, Bounds.Height * 0.5f, 0));
+            _transform = Matrix.CreateTranslation(new Vector3(-_position.X, -_position.Y, 0)) * Matrix.CreateScale(_zoom, _zoom, 1.0f) * Matrix.CreateTranslation(new Vector3(Bounds.Width * 0.5f, Bounds.Height * 0.5f, 0));
             UpdateVisibleArea();
         }
 

@@ -47,5 +47,15 @@ namespace Barebones.Asset.Scripts
         {
             get { return _loopEnd; }
         }
+
+        /// <summary>
+        /// Creates an empty MusicScript for fallback purposes.
+        /// </summary>
+        public MusicScript()
+        {
+            _musicPath = "fallback";
+            _loopStart = TimeSpan.Zero;
+            _loopEnd = TimeSpan.Zero;
+        }
     }
 }

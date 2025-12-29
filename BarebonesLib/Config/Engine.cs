@@ -452,13 +452,10 @@ namespace Barebones
             if (Verbose.ShowConsole)
             {
                 _updateNum++;
-                _updateTime += GameTime.ElapsedGameTime.TotalMilliseconds;
                 if (_updateNum >= 60)
                 {
                     _updateNum = 0;
-                    float avg = (float)Math.Round((1000.0 / _updateTime) * 60.0, 1);
-                    _updateTime = 0.0;
-                    string status = $"{Game.Window.Title} - FPS: {avg} ScC: {ScriptFinder.CacheSize} TC: {Textures.CacheSize} SnC: {Sound.CacheSize} PS: {ParticleHandler.SystemCount} PP: {ParticleHandler.ParticleCount}";
+                    string status = $"Barebones - ScC: {ScriptFinder.CacheSize} TC: {Textures.CacheSize} SnC: {Sound.CacheSize} PS: {ParticleHandler.SystemCount} PP: {ParticleHandler.ParticleCount}";
                     Console.Title = status;
                 }
             }

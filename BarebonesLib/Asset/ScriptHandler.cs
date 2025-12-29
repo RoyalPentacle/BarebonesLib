@@ -34,7 +34,7 @@ namespace Barebones.Asset
         /// <typeparam name="T">The type of script, must be a Script or inherit Script</typeparam>
         /// <param name="scriptPath">The path of the script to find.</param>
         /// <returns>A script of the specified type.</returns>
-        public static T FindScript<T>(string scriptPath) where T : Script
+        public static T FindScript<T>(string scriptPath) where T : Script, new()
         {
             try
             {
@@ -53,7 +53,7 @@ namespace Barebones.Asset
                     // Otherwise, spit out an error and return null.
                     // This shouldn't happen so long as proper naming conventions for scripts is followed.
                     Verbose.WriteErrorMajor($"SCRIPT: Found {value.GetType}, {scriptPath} but it was not the {typeof(T).Name} we expected!");
-                    return null;
+                    return new T();
                 }
                 else // Otherwise, we don't have the script cached, so load it, cache it, return it.
                 {
@@ -69,7 +69,7 @@ namespace Barebones.Asset
             catch (Exception ex) // Things can go wrong sometimes.
             {
                 Verbose.WriteErrorMajor($"SCRIPT: Failed to find {typeof(T).Name}, {scriptPath} \n EX: {ex.Message}");
-                return null;
+                return new T();
             }
             finally
             {
@@ -84,7 +84,7 @@ namespace Barebones.Asset
         /// <typeparam name="T">The type of script to load.</typeparam>
         /// <param name="scriptPath">The name of the script to load.</param>
         /// <returns>A script of the specified type.</returns>
-        private static T LoadScript<T>(string scriptPath) where T : Script
+        private static T LoadScript<T>(string scriptPath) where T : Script, new()
         {
             StreamReader? reader = null;
             try 
@@ -102,7 +102,7 @@ namespace Barebones.Asset
             {
                 Verbose.WriteErrorMajor($"SCRIPT: Failed to load {typeof(T).Name}, {scriptPath} \n EX: {ex.Message}");
                 reader?.Close();
-                return null;
+                return new T();
             }
         }
 
