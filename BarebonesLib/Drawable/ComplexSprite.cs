@@ -285,6 +285,10 @@ namespace Barebones.Drawable
             set { _speedMultiplier = value; }
         }
 
+        internal bool IsColourizing
+        {
+            get { return _isColourizing; }
+        }
 
 
         /// <summary>

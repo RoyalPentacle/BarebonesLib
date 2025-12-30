@@ -362,6 +362,17 @@ namespace Barebones.Drawable
             _isScaling = true;
         }
 
+
+        /// <summary>
+        /// Transition the sprite to the specified scale over the span of the specified milliseconds.
+        /// </summary>
+        /// <param name="scale">The scalar as a Vector2.</param>
+        /// <param name="milliseconds">The time in milliseconds over which the change should occur.</param>
+        public void ScaleOverTime(Vector2 scale, float milliseconds)
+        {
+            ScaleOverTime(scale.X, scale.Y, milliseconds);
+        }
+
         private protected void UpdateScale()
         {
             if (_isScaling)
