@@ -16,25 +16,25 @@ namespace Barebones.Asset.Scripts
     {
 
         [JsonProperty]
-        private GeneratorPattern[] _generators;
+        private GeneratorPattern[]? _generators;
 
         /// <summary>
         /// The array of GeneratorPatterns for constructing a particle system.
         /// </summary>
         [JsonIgnore]
-        public GeneratorPattern[] Generators
+        public GeneratorPattern[]? Generators
         {
             get { return _generators; }
         }
 
         [JsonProperty]
-        private AttractorPattern[] _attractors;
+        private AttractorPattern[] ?_attractors;
 
         /// <summary>
         /// The array of AttractorPatterns for constructing a particle system.
         /// </summary>
         [JsonIgnore]
-        public AttractorPattern[] Attractors
+        public AttractorPattern[]? Attractors
         {
             get { return _attractors; }
         }

@@ -374,9 +374,11 @@ namespace Barebones.Drawable
                 }
                 else
                     _scale += _scalingDestinationScale;
-
-                _cullRec.Width = (int)(_texture.Width * _scale.Width) + 1;
-                _cullRec.Height = (int)(_texture.Height * _scale.Height) + 1;
+                if (_texture != null)
+                {
+                    _cullRec.Width = (int)(_texture.Width * _scale.Width) + 1;
+                    _cullRec.Height = (int)(_texture.Height * _scale.Height) + 1;
+                }
             }
         }
 

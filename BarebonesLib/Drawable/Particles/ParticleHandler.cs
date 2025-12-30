@@ -79,10 +79,13 @@ namespace Barebones.Drawable.Particles
 
         internal static void Update()
         {
-            while (_addParticleSystemQueue.TryDequeue(out ParticleSystem p))
+            while (_addParticleSystemQueue.TryDequeue(out ParticleSystem? p))
             {
-                _particleSystems.Add(p);
-                p.Start();
+                if (p != null)
+                {
+                    _particleSystems.Add(p);
+                    p.Start();
+                }
             }
             _particleBarrier.SignalAndWait();
         }
@@ -127,11 +130,6 @@ namespace Barebones.Drawable.Particles
         public static void AddParticleSystem(string scriptPath, Vector2 position, Vector2 forces, Vector2 velocityMultiplier, ComplexSprite? monitorSprite)
         {
             _addParticleSystemQueue.Enqueue(new ParticleSystem(scriptPath, position, forces, velocityMultiplier, monitorSprite));
-        }
-
-        public static void AddParticleSystem(string scriptPath, AttachPointMonitor monitor, Vector2 forces, Vector2 velocityMultiplier, ComplexSprite? monitorSprite)
-        {
-            _addParticleSystemQueue.Enqueue(new ParticleSystem(scriptPath, monitor, forces, velocityMultiplier, monitorSprite));
         }
 
         /// <summary>

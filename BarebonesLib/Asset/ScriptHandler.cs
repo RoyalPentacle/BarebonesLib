@@ -61,8 +61,7 @@ namespace Barebones.Asset
                     var script = LoadScript<T>(scriptPath);
                     UpdateCachedScriptList(scriptPath);
                     _scriptCache.Add(scriptPath, script);
-                    if (script != null)
-                        _cacheSize += script.FileSize;
+                    _cacheSize += script.FileSize;
                     return script;
                 }
             }
@@ -94,8 +93,10 @@ namespace Barebones.Asset
                 string json = reader.ReadToEnd();
                 reader.Close();
                 var script = JsonConvert.DeserializeObject<T>(json);
+                if (script == null)
+                    script = new T();
                 Verbose.WriteLogMinor($"SCRIPT: Loaded {typeof(T).Name}, {scriptPath}");
-                script?.SetFilesize(new FileInfo(scriptPath).Length);
+                script.SetFilesize(new FileInfo(scriptPath).Length);
                 return script;
             }
             catch (Exception ex)

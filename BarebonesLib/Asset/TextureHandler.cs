@@ -217,9 +217,9 @@ namespace Barebones.Asset
 
         internal static void LoadAsyncQueue()
         {
-            while (_asyncQueue.TryDequeue(out Action result))
+            while (_asyncQueue.TryDequeue(out Action? result))
             {
-                result.Invoke();
+                result?.Invoke();
             }
         }
 

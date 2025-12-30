@@ -28,24 +28,35 @@ namespace Barebones.Drawable
 
             private float _rotation;
 
+            private float _angularSpeed;
+
             private AttachPointMonitor? _attachPointMonitor;
 
             private Vector2 _offset;
 
             private LayeredSprite _parent;
 
+            /// <summary>
+            /// The ComplexSprite for this layer.
+            /// </summary>
             public ComplexSprite Sprite
             {
                 get { return _sprite; }
             }
 
-            // TODO: LUA THE WHOLE THING????
-
+            /// <summary>
+            /// Construct a new Layer from the specified arguments.
+            /// </summary>
+            /// <param name="pattern">The LayerPattern to build this layer from/</param>
+            /// <param name="depth">The SpriteDepth for this layer.</param>
+            /// <param name="parent">The LayeredSprite that owns this layer.</param>
             public Layer(LayeredSpriteScript.LayerPattern pattern, float depth, LayeredSprite parent)
             {
                 _parent = parent;
                 _sprite = new ComplexSprite(pattern.SpriteScript);
                 _sprite.SpriteDepth = depth;
+                _rotation = pattern.Rotation;
+                _angularSpeed = pattern.AngularSpeed;
                 if (pattern.MonitorPattern.HasValue)
                     _attachPointMonitor = new AttachPointMonitor(_parent.Layers[pattern.MonitorPattern.Value.Layer].Sprite, pattern.MonitorPattern.Value.AttachPoint, pattern.MonitorPattern.Value.InheritRotation);
                 else if (pattern.Position != null)
@@ -57,15 +68,25 @@ namespace Barebones.Drawable
 
             }
 
+            /// <summary>
+            /// Update this layer.
+            /// </summary>
             public void Update()
             {
-                _rotation += 0.003f; // testing rotation. expose to some other method, lua most likely.
+                _rotation += _angularSpeed;
                 _sprite.Rotation = _rotation;
-                if (_attachPointMonitor != null && _attachPointMonitor.InheritRotation)
+                if (_attachPointMonitor != null)
                     _sprite.Rotation += _attachPointMonitor.Rotation;
                 _sprite.UpdateSprite();
             }
 
+            /// <summary>
+            /// Draw this layer, at the specified position.
+            /// </summary>
+            /// <remarks>
+            /// Ignores position if this layer has an <see cref="AttachPointMonitor"/> specified.
+            /// </remarks>
+            /// <param name="position">The position to draw the layer at.</param>
             public void Draw(Vector2 position)
             {
                 if (_attachPointMonitor != null)
@@ -77,11 +98,22 @@ namespace Barebones.Drawable
 
         private Layer[] _layers;
 
+        /// <summary>
+        /// The collection of <see cref="Layer"/> that makes up this LayeredSprite
+        /// </summary>
         public Layer[] Layers
         {
             get { return _layers; }
         }
 
+        /// <summary>
+        /// Constructs a new LayeredSprite from the specified script and at the specified SpriteDepth.
+        /// </summary>
+        /// <remarks>
+        /// Each layer is offset by 0.0001f from the previous layer in the LayeredSprite, to ensure the correct ordering.
+        /// </remarks>
+        /// <param name="scriptPath">The path to the LayeredSpriteScript to load.</param>
+        /// <param name="depth">The SpriteDepth of this LayeredSprite</param>
         public LayeredSprite(string scriptPath, float depth)
         {
             LayeredSpriteScript script = ScriptFinder.FindScript<LayeredSpriteScript>(scriptPath);
@@ -93,14 +125,13 @@ namespace Barebones.Drawable
                 { 
                     _layers[i] = new Layer(script.Layers[i], depth + depthAdd, this);
                     depthAdd += 0.0001f;
-                    if (i >= 5)
-                    {
-                        ParticleHandler.AddParticleSystem("scripts/particles/test_thruster.pts", new AttachPointMonitor(_layers[i].Sprite, "end", true), Vector2.Zero, Vector2.One, null);
-                    }
                 }
             }
         }
 
+        /// <summary>
+        /// Updates this LayeredSprite, and all layers within.
+        /// </summary>
         public void Update()
         {
             foreach (Layer layer in Layers)
@@ -109,6 +140,10 @@ namespace Barebones.Drawable
             }
         }
 
+        /// <summary>
+        /// Draws this LayeredSprite at the specified position.
+        /// </summary>
+        /// <param name="position">The position to draw this sprite at.</param>
         public void Draw(Vector2 position)
         {
             foreach(Layer layer in Layers)
@@ -116,6 +151,5 @@ namespace Barebones.Drawable
                 layer.Draw(position);
             }
         }
-
     }
 }

@@ -29,13 +29,10 @@ namespace Barebones.Config
                 {
                     string json = sr.ReadToEnd();
                     sr.Close();
-                    Dictionary<string, Keys> _boundTemp = JsonConvert.DeserializeObject<Dictionary<string, Keys>>(json);
-                    if (_boundTemp != null )
+                    Dictionary<string, Keys> _boundTemp = JsonConvert.DeserializeObject<Dictionary<string, Keys>>(json) ?? new Dictionary<string, Keys>();
+                    foreach (KeyValuePair<string, Keys> pair in _boundTemp)
                     {
-                        foreach (KeyValuePair<string, Keys> pair in _boundTemp)
-                        {
-                            _boundControls.AddOrUpdate(pair.Key, pair.Value, UpdateKey);
-                        }
+                        _boundControls.AddOrUpdate(pair.Key, pair.Value, UpdateKey);
                     }
                 }
             }

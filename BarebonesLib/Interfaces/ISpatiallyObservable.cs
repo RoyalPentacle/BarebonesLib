@@ -19,5 +19,14 @@ namespace Barebones.Interfaces
         {
             get;
         }
+
+        /// <summary>
+        /// The rotation of the observable thing.
+        /// </summary>
+        public abstract float Rotation
+        {
+            get;
+        }
+
     }
 }

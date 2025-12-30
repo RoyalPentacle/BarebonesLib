@@ -13,7 +13,7 @@ namespace Barebones.Asset
     {
         private static OggSong _song;
 
-        private static List<DynamicSoundEffectInstance> _instanceList = new List<DynamicSoundEffectInstance>();
+        private static readonly List<DynamicSoundEffectInstance> _instanceList = new List<DynamicSoundEffectInstance>();
 
         /// <summary>
         /// Play the music from the specified music script.
@@ -67,11 +67,11 @@ namespace Barebones.Asset
         private int _sampleRate;
 
 
-        private DynamicSoundEffectInstance _dynamicOgg;
+        private DynamicSoundEffectInstance? _dynamicOgg;
 
         private EventHandler<EventArgs> _handler;
 
-        private VorbisReader _reader;
+        private VorbisReader? _reader;
 
         /// <summary>
         /// Get and Set the volume of the music track.
@@ -99,8 +99,18 @@ namespace Barebones.Asset
         /// </summary>
         public float Pitch
         {
-            get { return _dynamicOgg.Pitch; }
-            set { _dynamicOgg.Pitch = (float)Math.Clamp(value, -1.0, 1.0); }
+            get 
+            {
+                if (_dynamicOgg != null)
+                    return _dynamicOgg.Pitch;
+                else
+                    return 0f;
+            }
+            set 
+            { 
+                if (_dynamicOgg != null)
+                    _dynamicOgg.Pitch = (float)Math.Clamp(value, -1.0, 1.0); 
+            }
         }
         
         /// <summary>
@@ -116,7 +126,6 @@ namespace Barebones.Asset
             }
             catch (Exception e)
             {
-                _reader = null;
                 if (script.MusicPath != "fallback")
                     Verbose.WriteErrorMajor($"Failed to load music: {script.MusicPath}\n Ex: {e.Message}");
                 return;
@@ -136,28 +145,33 @@ namespace Barebones.Asset
 
         private byte[] ReadOgg()
         {
-            float[] buffer = new float[_channels * _sampleRate / 5];
-            List<byte> byteList = new List<byte>();
-            int count = _reader.ReadSamples(buffer, 0, buffer.Length);
-            for (int i = 0; i < count; i++)
+            if (_reader != null)
             {
-                short temp = (short)(32767f * buffer[i]);
-                if (temp > 32767)
+                float[] buffer = new float[_channels * _sampleRate / 5];
+                List<byte> byteList = new List<byte>();
+                int count = _reader.ReadSamples(buffer, 0, buffer.Length);
+                for (int i = 0; i < count; i++)
                 {
-                    byteList.Add(0xFF);
-                    byteList.Add(0x7F);
+                    short temp = (short)(32767f * buffer[i]);
+                    if (temp > 32767)
+                    {
+                        byteList.Add(0xFF);
+                        byteList.Add(0x7F);
+                    }
+                    else if (temp < -32768)
+                    {
+                        byteList.Add(0x80);
+                        byteList.Add(0x00);
+                    }
+                    byteList.Add((byte)temp);
+                    byteList.Add((byte)(temp >> 8));
                 }
-                else if (temp < -32768)
-                {
-                    byteList.Add(0x80);
-                    byteList.Add(0x00);
-                }
-                byteList.Add((byte)temp);
-                byteList.Add((byte)(temp >> 8));
+
+
+                return byteList.ToArray();
             }
-
-
-            return byteList.ToArray();
+            else
+                return Array.Empty<byte>();
         }
 
         /// <summary>
@@ -165,7 +179,7 @@ namespace Barebones.Asset
         /// </summary>
         public void Play()
         {
-            if (_reader != null)
+            if (_reader != null && _dynamicOgg != null)
             {
                 _dynamicOgg.Pitch = 0;
                 _dynamicOgg.Volume = Engine.MusicVolume;
@@ -182,7 +196,7 @@ namespace Barebones.Asset
             {
                 _dynamicOgg.Stop();
                 _dynamicOgg.BufferNeeded -= _handler;
-                _reader.Dispose();
+                _reader?.Dispose();
                 _reader = null;
                 _dynamicOgg = null;
             }
@@ -194,7 +208,8 @@ namespace Barebones.Asset
         /// <param name="time">The TimeSpan to set the playhead to.</param>
         public void SetPlayHead(TimeSpan time)
         {
-            _reader.TimePosition = time;
+            if (_reader != null)
+                _reader.TimePosition = time;
         }
 
         /// <summary>
@@ -203,31 +218,36 @@ namespace Barebones.Asset
         /// <returns>A TimeSpan representing the current playhead position.</returns>
         public TimeSpan GetPlayHead()
         {
-            return _reader.TimePosition;
+            if (_reader != null)
+                return _reader.TimePosition;
+            else
+                return TimeSpan.Zero;
         }
 
-        private void UpdateBuffer(object sender, EventArgs e)
+        private void UpdateBuffer(object? sender, EventArgs e)
         {
-            byte[] buffer = ReadOgg();
-            if (buffer != null && buffer.Length > 0)
+            if (sender is DynamicSoundEffectInstance inst)
             {
-                _dynamicOgg.SubmitBuffer(buffer, 0, buffer.Length / 2);
-                _dynamicOgg.SubmitBuffer(buffer, buffer.Length / 2, buffer.Length / 2);
-            } 
-            else 
-            {
-                Stop();
-                return;
+                byte[] buffer = ReadOgg();
+                if (buffer != null && buffer.Length > 0)
+                {
+                    inst.SubmitBuffer(buffer, 0, buffer.Length / 2);
+                    inst.SubmitBuffer(buffer, buffer.Length / 2, buffer.Length / 2);
+                }
+                else
+                {
+                    Stop();
+                    return;
+                }
+
+
+                if (_loopEnd != TimeSpan.Zero && _reader?.TimePosition > _loopEnd)
+                {
+                    TimeSpan currentHead = _reader.TimePosition;
+                    currentHead -= _loopLength;
+                    _reader.TimePosition = currentHead;
+                }
             }
-
-
-            if (_loopEnd != TimeSpan.Zero && _reader.TimePosition > _loopEnd)
-            {
-                TimeSpan currentHead = _reader.TimePosition;
-                currentHead -= _loopLength;
-                _reader.TimePosition = currentHead;
-            }
-
         }
     }
 

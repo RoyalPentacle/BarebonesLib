@@ -496,7 +496,7 @@ namespace Barebones.Drawable.Particles
 
         private ParticleFlags _flags;   
 
-        private string? _spritePath;
+        private string _spritePath;
 
         private ParticleSystem _parentSystem;
 
@@ -543,7 +543,8 @@ namespace Barebones.Drawable.Particles
             _fullRandomPos = pattern.FullRandomPos;
             _type = pattern.Type;
             _flags = pattern.Flags;
-            _spritePath = pattern.SpritePath;
+            if (pattern.SpritePath != null)
+                _spritePath = pattern.SpritePath;
         }
 
         private Vector2 GenerateBiasedVector2(Vector4 range, double bias)
@@ -611,9 +612,9 @@ namespace Barebones.Drawable.Particles
             Vector2 velocity = GenerateBiasedVector2(_velocityRange, _velocityBias);
             velocity += _baseVelocity;
             velocity *= _parentSystem.VelocityMultiplier;
-            if (_parentSystem.AttachMonitor != null && _parentSystem.AttachMonitor.InheritRotation)
+            if (_parentSystem.Monitor != null)
             {
-                velocity = Vector2.Transform(velocity, Matrix.CreateRotationZ(_parentSystem.AttachMonitor.Rotation));
+                velocity = Vector2.Transform(velocity, Matrix.CreateRotationZ(_parentSystem.Monitor.Rotation));
             }
             return velocity;
         }
@@ -675,6 +676,7 @@ namespace Barebones.Drawable.Particles
 
         private void CreateParticle()
         {
+            
             if (_type == ParticleType.Point)
             {
                 PointParticle newParticle = new PointParticle(GenerateNewParticlePosition() + _parentSystem.Position, GenerateNewParticleVelocity(), GenerateNewParticleLifespan(), GenerateNewParticleRotation(), GenerateNewParticleAngularSpeed(), GenerateNewParticleScale(), GenerateNewParticleDepth(), GenerateNewParticleColor(), _flags, _parentSystem);

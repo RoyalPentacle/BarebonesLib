@@ -71,6 +71,12 @@ namespace Barebones.Asset.Scripts
             [JsonProperty]
             private Vector2? _position;
 
+            [JsonProperty]
+            private float _rotation;
+
+            [JsonProperty]
+            private float _angularSpeed;
+
             /// <summary>
             /// The path to the SpriteScript for the ComplexSprite that makes up this layer.
             /// </summary>
@@ -99,16 +105,34 @@ namespace Barebones.Asset.Scripts
             {
                 get { return _position; }
             }
+
+            /// <summary>
+            /// The starting rotation of this layer.
+            /// </summary>
+            [JsonIgnore]
+            public float Rotation
+            {
+                get { return _rotation; }
+            }
+
+            /// <summary>
+            /// The starting angular speed of this layer.
+            /// </summary>
+            [JsonIgnore]
+            public float AngularSpeed
+            {
+                get { return _angularSpeed; }
+            }
         }
 
         [JsonProperty]
-        private LayerPattern[] _layers;
+        private LayerPattern[]? _layers;
 
         /// <summary>
         /// The collection of patterns for building the Layers of the LayeredSprite.
         /// </summary>
         [JsonIgnore]
-        public LayerPattern[] Layers
+        public LayerPattern[]? Layers
         {
             get { return _layers; }
         }

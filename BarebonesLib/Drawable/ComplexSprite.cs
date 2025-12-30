@@ -44,11 +44,11 @@ namespace Barebones.Drawable
 
             // A lua script to execute on frame start.
             [JsonProperty]
-            private string _startLuaScript;
+            private string? _startLuaScript;
 
             // A lua script to execute on frame end.
             [JsonProperty]
-            private string _endLuaScript;
+            private string? _endLuaScript;
 
             /// <summary>
             /// The rectangle we pull from the spriteSheet to draw.
@@ -99,7 +99,7 @@ namespace Barebones.Drawable
             /// The Lua script to execute when this frame becomes active.
             /// </summary>
             [JsonIgnore]
-            public string StartingLuaScript
+            public string? StartingLuaScript
             {
                 get { return _startLuaScript; }
             }
@@ -108,7 +108,7 @@ namespace Barebones.Drawable
             /// The Lua script to execute when this frame becomes inactive.
             /// </summary>
             [JsonIgnore]
-            public string EndingLuaScript
+            public string? EndingLuaScript
             {
                 get { return _endLuaScript; }
             }
@@ -308,7 +308,10 @@ namespace Barebones.Drawable
             if (_animations.Count == 0)
             {
                 Anim fallback = new Anim();
-                fallback.AddFrame(new Frame(new Rectangle(0, 0, _texture.Width, _texture.Height), 1000f, new Vector2(_texture.Width / 2, _texture.Height / 2)));
+                if (_texture != null)
+                    fallback.AddFrame(new Frame(new Rectangle(0, 0, _texture.Width, _texture.Height), 1000f, new Vector2(_texture.Width / 2, _texture.Height / 2)));
+                else
+                    fallback.AddFrame(new Frame(new Rectangle(0, 0, 32, 32), 1000f, new Vector2(16, 16)));
                 _animations.Add("IDLE", fallback);
             }
             ChangeAnimation(script.DefaultAnim);
@@ -405,7 +408,6 @@ namespace Barebones.Drawable
         }
         #endregion
 
-        private float _addRot;
         /// <summary>
         /// Update the sprite.
         /// </summary>

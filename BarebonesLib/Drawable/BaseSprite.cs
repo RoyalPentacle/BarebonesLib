@@ -21,7 +21,7 @@ namespace Barebones.Drawable
 
         private protected Color _colour;
 
-        private protected Texture2D _texture;
+        private protected Texture2D? _texture;
 
         private protected Rectangle _cullRec;
 

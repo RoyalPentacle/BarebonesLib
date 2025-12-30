@@ -48,13 +48,10 @@ namespace Barebones.Config
                 {
                     string json = sr.ReadToEnd();
                     sr.Close();
-                    Dictionary<string, string> _tempLocal = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-                    if (_tempLocal != null)
+                    Dictionary<string, string> _tempLocal = JsonConvert.DeserializeObject<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
+                    foreach (KeyValuePair<string, string> pair in _tempLocal)
                     {
-                        foreach (KeyValuePair<string, string> pair in _tempLocal)
-                        {
-                            _localization.AddOrUpdate(pair.Key, pair.Value, UpdateString);
-                        }
+                        _localization.AddOrUpdate(pair.Key, pair.Value, UpdateString);
                     }
                 }
             }

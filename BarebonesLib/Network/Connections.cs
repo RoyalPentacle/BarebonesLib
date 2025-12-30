@@ -499,23 +499,26 @@ namespace Barebones.Network
                 {
                     try
                     {
-                        UdpReceiveResult receivedResult = await _udpClient.ReceiveAsync(_cts.Token);
-                        Packet packet = new Packet(receivedResult);
-
-                        if (packet.Data.Length > 0)
+                        if (_udpClient != null)
                         {
-                            if (_typeActions.ContainsKey(packet.Data[0]))
+                            UdpReceiveResult receivedResult = await _udpClient.ReceiveAsync(_cts.Token);
+                            Packet packet = new Packet(receivedResult);
+
+                            if (packet.Data.Length > 0)
                             {
-                                _mut.WaitOne();
-                                if (_clientDict.TryGetValue(packet.EndPoint, out byte id))
+                                if (_typeActions.ContainsKey(packet.Data[0]))
                                 {
-                                    _clientTimeoutDict[id].Reset();
+                                    _mut.WaitOne();
+                                    if (_clientDict.TryGetValue(packet.EndPoint, out byte id))
+                                    {
+                                        _clientTimeoutDict[id].Reset();
+                                    }
+                                    _mut.ReleaseMutex();
+                                    _typeActions[packet.Data[0]](packet);
                                 }
-                                _mut.ReleaseMutex();
-                                _typeActions[packet.Data[0]](packet);
+                                else
+                                    Verbose.WriteErrorMinor($"Unknown Packet Type Received! Byte value: {packet.Data[0]}");
                             }
-                            else
-                                Verbose.WriteErrorMinor($"Unknown Packet Type Received! Byte value: {packet.Data[0]}");
                         }
                     }
                     catch (OperationCanceledException)

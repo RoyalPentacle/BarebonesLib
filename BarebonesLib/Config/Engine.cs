@@ -426,8 +426,17 @@ namespace Barebones
                         {
                             if (splitArg.Length > 1)
                                 {
-                                    if (!IPAddress.TryParse(splitArg[1], out _defaultUDPHostAddress))
-                                        _defaultUDPHostAddress = IPAddress.Loopback;
+                                    if (!IPAddress.TryParse(splitArg[1], out IPAddress? address))
+                                    {
+                                            _defaultUDPHostAddress = IPAddress.Loopback;
+                                    } 
+                                    else
+                                    {
+                                        if (address == null)
+                                            _defaultUDPHostAddress = IPAddress.Loopback;
+                                        else
+                                            _defaultUDPHostAddress = address;
+                                    }
                                 }
                                 if (splitArg.Length > 2)
                                     if (!int.TryParse(splitArg[2], out _defaultUDPHostPort))
