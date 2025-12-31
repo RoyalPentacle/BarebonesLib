@@ -1,6 +1,7 @@
 ﻿using Barebones.Asset.Scripts;
 using Barebones.Config;
 using Newtonsoft.Json;
+using System.Collections.Concurrent;
 
 namespace Barebones.Asset
 {
@@ -16,7 +17,11 @@ namespace Barebones.Asset
         // Since Dictionaries do not have a way to determine the order elements were inserted, we use this list to track that instead.
         private static List<string> _sortedCache = new List<string>();
 
+        private static ConcurrentDictionary<string, string> _aliasDict = new ConcurrentDictionary<string, string>();
+
         private static long _cacheSize = 0L;
+
+        private static Mutex _mutex = new Mutex();
 
         /// <summary>
         /// The current size of the script cache.
@@ -26,15 +31,65 @@ namespace Barebones.Asset
             get { return _cacheSize; }
         }
 
-        private static Mutex _mutex = new Mutex();
+        private static string DictAddUpdateResolver(string key, string value)
+        {
+            return value;
+        }
+        
+        /// <summary>
+        /// Registers an alias for the scriptpath as specified by every pair in the provided bundle.
+        /// </summary>
+        /// <remarks>
+        /// Uses AddOrUpdate logic, so it will override an existing alias if it already exists.
+        /// </remarks>
+        /// <param name="bundle">A bundle to register.</param>
+        public static void RegisterAlias(Bundle bundle)
+        {
+            if (bundle != null && bundle.Pairs != null)
+            {
+                foreach (KeyValuePair<string, string> pair in bundle.Pairs)
+                {
+                    RegisterAlias(pair.Key, pair.Value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Registers an alias for the scriptpath specified.
+        /// </summary>
+        /// <remarks>
+        /// Uses AddOrUpdate logic, so it will override an existing alias if it already exists.
+        /// </remarks>
+        /// <param name="alias">The alias to use.</param>
+        /// <param name="scriptPath">The scriptPath.</param>
+        public static void RegisterAlias(string alias, string scriptPath)
+        {
+            _aliasDict.AddOrUpdate(alias, scriptPath, DictAddUpdateResolver);
+        }
 
         /// <summary>
         /// Find a script of the given type and path, loading it if we do not have it cached.
         /// </summary>
-        /// <typeparam name="T">The type of script, must be a Script or inherit Script</typeparam>
-        /// <param name="scriptPath">The path of the script to find.</param>
+        /// <remarks>
+        /// When this is called, it first attempts to get the path corresponding to the provided pathOrAlias.
+        /// If it doesn't hit, it assumes you gave it a path and tries to find that instead.
+        /// </remarks>
+        /// <typeparam name="T">The type of script, must be be an inheritor of <see cref="Script"/></typeparam>
+        /// <param name="pathOrAlias">The path or alias of the script to find.</param>
         /// <returns>A script of the specified type.</returns>
-        public static T FindScript<T>(string scriptPath) where T : Script, new()
+        public static T FindScript<T>(string pathOrAlias) where T : Script, new()
+        {
+            if (_aliasDict.TryGetValue(pathOrAlias, out string? path))
+            {
+                if (path != null)
+                {
+                    return FindScriptByPath<T>(path);
+                }
+            }
+            return FindScriptByPath<T>(pathOrAlias);
+        }
+
+        private static T FindScriptByPath<T>(string scriptPath) where T : Script, new()
         {
             try
             {
@@ -74,7 +129,7 @@ namespace Barebones.Asset
             {
                 _mutex.ReleaseMutex();
             }
-            
+
         }
 
         /// <summary>
