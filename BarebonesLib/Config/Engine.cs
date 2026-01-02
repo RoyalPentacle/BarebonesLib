@@ -235,7 +235,18 @@ namespace Barebones
 
         #endregion
 
+        private static bool _targetGraphWrapSelection;
 
+        /// <summary>
+        /// Do TargetGraph objects wrap around when selection fails to find a target in a given direction?
+        /// </summary>
+        /// <remarks>
+        /// That is, if there is no target on the left, do we instead select the furthest on the right?
+        /// </remarks>
+        public static bool TargetGraphWrapSelection
+        {
+            get { return _targetGraphWrapSelection; }
+        }
 
         private static KeyboardState _oldKeyboardState;
 

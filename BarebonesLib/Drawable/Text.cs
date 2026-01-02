@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barebones.Interfaces;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace Barebones.Drawable
     /// <summary>
     /// A class that draws text to the screen.
     /// </summary>
-    public class Text
+    public class Text : IDrawnObject
     {
         private string _storedText;
         private string[] _animArray;
@@ -21,6 +22,9 @@ namespace Barebones.Drawable
 
         private Color[] _letterColour;
 
+        /// <summary>
+        /// The ComplexSprite that functions as the font for this text.
+        /// </summary>
         public ComplexSprite Font
         {
             get { return _font; }

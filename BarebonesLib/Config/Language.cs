@@ -79,7 +79,7 @@ namespace Barebones.Config
             }
             else
             {
-                Verbose.WriteErrorMinor($"Missing localization string for token: {token}");
+                Verbose.WriteErrorMinor($"Missing localization string for token: {token} for lang: {_currentLang}");
                 return token;
             }
         }
