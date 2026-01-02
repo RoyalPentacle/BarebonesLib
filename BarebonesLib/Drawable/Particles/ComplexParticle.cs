@@ -41,7 +41,7 @@ namespace Barebones.Drawable.Particles
         }
         public override void Draw()
         {
-            _sprite.DrawSprite(_position);
+            _sprite.Draw(_position);
         }
 
         public override void Unload()

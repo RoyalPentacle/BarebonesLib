@@ -90,9 +90,9 @@ namespace Barebones.Drawable
             public void Draw(Vector2 position)
             {
                 if (_attachPointMonitor != null)
-                    _sprite.DrawSprite(_attachPointMonitor.Position);
+                    _sprite.Draw(_attachPointMonitor.Position);
                 else
-                    _sprite.DrawSprite(position + _offset);
+                    _sprite.Draw(position + _offset);
             }
         }
 

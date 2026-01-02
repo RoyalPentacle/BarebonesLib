@@ -21,6 +21,11 @@ namespace Barebones.Drawable
 
         private Color[] _letterColour;
 
+        public ComplexSprite Font
+        {
+            get { return _font; }
+        }
+
         /// <summary>
         /// The string to be displayed by this text.
         /// </summary>
@@ -127,7 +132,7 @@ namespace Barebones.Drawable
                 {
                     if (_font.Animations.TryGetValue(_animArray[i], out ComplexSprite.Anim? anim))
                     {
-                        _textWidth = (int)(_textWidth + anim.Frames[0].Width * _scale);
+                        _textWidth = (int)(_textWidth + ((anim.Frames[0].Width + 2) * _scale));
                         if (_textHeight < anim.Frames[0].Height * _scale)
                         {
                             _textHeight = (int)(anim.Frames[0].Height * _scale);
@@ -183,7 +188,7 @@ namespace Barebones.Drawable
 
                 _font.ChangeAnimation(_animArray[i]);
                 position.X += (_font.CurrentFrame.Width - _font.CurrentFrame.Origin.X) * _scale;
-                _font.DrawSprite(position);
+                _font.Draw(position);
                 position.X += (_font.CurrentFrame.Width - _font.CurrentFrame.Origin.X + 2) * _scale;
             }
         }

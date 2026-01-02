@@ -3,6 +3,7 @@ using Barebones.Asset.Scripts;
 using Barebones.Config;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Barebones.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace Barebones.Drawable
     /// <summary>
     /// The base class for all sprites.
     /// </summary>
-    public abstract class BaseSprite
+    public abstract class BaseSprite : IDrawnObject
     {
 
         private protected string _texturePath;
@@ -86,6 +87,6 @@ namespace Barebones.Drawable
         /// Draw the sprite at a given position.
         /// </summary>
         /// <param name="position">The position to draw the sprite at.</param>
-        public abstract void DrawSprite(Vector2 position);
+        public abstract void Draw(Vector2 position);
     }
 }

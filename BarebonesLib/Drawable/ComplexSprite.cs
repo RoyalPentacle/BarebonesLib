@@ -427,7 +427,7 @@ namespace Barebones.Drawable
         /// Draw the sprite at a given position.
         /// </summary>
         /// <param name="position">The position to draw the sprite at.</param>
-        public override void DrawSprite(Vector2 position)
+        public override void Draw(Vector2 position)
         {
             if (_texture != null)
             {

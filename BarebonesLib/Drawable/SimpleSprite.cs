@@ -273,9 +273,18 @@ namespace Barebones.Drawable
         /// </summary>
         /// <param name="scriptPath">The path to the SpriteScript to load.</param>
         /// <param name="spriteScript">The spriteScript loaded, for passing to inheritors.</param>
-        public SimpleSprite(string scriptPath, out SpriteScript spriteScript) : base(scriptPath, out SpriteScript script)
+        protected SimpleSprite(string scriptPath, out SpriteScript spriteScript) : base(scriptPath, out SpriteScript script)
         {
             spriteScript = script;
+        }
+
+        /// <summary>
+        /// Constructs a new SimpleSprite from the SpriteScript at the provided path.
+        /// </summary>
+        /// <param name="scriptPath">The path to the SpriteScript to load.</param>
+        public SimpleSprite(string scriptPath) : base(scriptPath, out SpriteScript script)
+        {
+            
         }
 
 
@@ -408,7 +417,7 @@ namespace Barebones.Drawable
         /// Draw the sprite at a given position.
         /// </summary>
         /// <param name="position">The position to draw the sprite at.</param>
-        public override void DrawSprite(Vector2 position)
+        public override void Draw(Vector2 position)
         {
             if (_texture != null)
             {
