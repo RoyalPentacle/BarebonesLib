@@ -25,6 +25,7 @@ namespace Barebones.Asset.Audio
             _instance = soundEffect.CreateInstance();
             _soundPath = script.SoundPath;
             Asset.Sound.DeclareSoundInstance(this);
+            _instance.Volume = Engine.SoundVolume;
             _instance.Play();
         }
 

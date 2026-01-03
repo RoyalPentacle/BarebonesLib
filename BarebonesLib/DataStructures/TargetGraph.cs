@@ -243,6 +243,16 @@ namespace Barebones.DataStructures
         {
             get 
             {
+                if (_selectedNode != null)
+                    return _selectedNode.Point;
+                else
+                {
+                    if (_nodes?.Count > 0)
+                    {
+                        _selectedNode = _nodes[0];
+                        return _selectedNode.Point;
+                    }
+                }
                 return _selectedNode.Point;
             }
         }
@@ -311,7 +321,6 @@ namespace Barebones.DataStructures
                 }
             }
             _mut.ReleaseMutex();
-            Verbose.WriteErrorMinor($"Unable to find specified {typeof(T).Name} in TargetGraph.");
             return null;
         }
 

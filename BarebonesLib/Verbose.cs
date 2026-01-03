@@ -17,7 +17,13 @@ namespace Barebones
         [DllImport("kernel32.dll", EntryPoint = "AllocConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         static extern int AllocConsole();
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool CancelIoEx(IntPtr handle, IntPtr lpOverlapped);
+
+        const int STD_INPUT_HANDLE = -10;
         const int STD_OUTPOUT_HANDLE = -11;
+        
+
 
         private struct ConsoleMessage
         {
@@ -104,43 +110,51 @@ namespace Barebones
 
         internal static void ReadConsoleInput()
         {
-            while (true)
+            while (!Engine.IsClosing)
             {
-                ConsoleKeyInfo input = Console.ReadKey(true);
-                if (input.Key == ConsoleKey.Enter)
+                ConsoleKeyInfo? input = null;
+                try
                 {
-                    ExecuteCommand();
-                    _lastInput = _input;
-                    _input = "";
+                    input = Console.ReadKey(true);
                 }
-                else if (input.Key == ConsoleKey.UpArrow)
+                catch { }
+                if (input.HasValue)
                 {
-                    string temp = _input;
-                    _input = _lastInput;
-                    _lastInput = temp;
-                    _mut.WaitOne();
-                    RefreshInput();
-                    _mut.ReleaseMutex();
-                }
-                else if (input.Key == ConsoleKey.Backspace)
-                {
-                    if (_input != "")
+                    if (input.Value.Key == ConsoleKey.Enter)
                     {
-                        _input = _input.Remove(_input.Length - 1);
+                        ExecuteCommand();
+                        _lastInput = _input;
+                        _input = "";
+                    }
+                    else if (input.Value.Key == ConsoleKey.UpArrow)
+                    {
+                        string temp = _input;
+                        _input = _lastInput;
+                        _lastInput = temp;
                         _mut.WaitOne();
                         RefreshInput();
                         _mut.ReleaseMutex();
                     }
-                }
-                else
-                {
-                    if (input.KeyChar != '\u0000')
+                    else if (input.Value.Key == ConsoleKey.Backspace)
                     {
-                        char command = input.KeyChar;
-                        _input += command;
-                        _mut.WaitOne();
-                        RefreshInput();
-                        _mut.ReleaseMutex();
+                        if (_input != "")
+                        {
+                            _input = _input.Remove(_input.Length - 1);
+                            _mut.WaitOne();
+                            RefreshInput();
+                            _mut.ReleaseMutex();
+                        }
+                    }
+                    else
+                    {
+                        if (input.Value.KeyChar != '\u0000')
+                        {
+                            char command = input.Value.KeyChar;
+                            _input += command;
+                            _mut.WaitOne();
+                            RefreshInput();
+                            _mut.ReleaseMutex();
+                        }
                     }
                 }
             }
@@ -192,7 +206,9 @@ namespace Barebones
         internal static void Close()
         {
             _fileOutput?.Close();
-            // Stop the input thread, somehow.
+            _input = "";
+            var handle = GetStdHandle(STD_INPUT_HANDLE);
+            CancelIoEx(handle, IntPtr.Zero);  
         }
 
         /// <summary>

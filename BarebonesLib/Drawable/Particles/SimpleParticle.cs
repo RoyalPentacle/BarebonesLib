@@ -23,7 +23,7 @@ namespace Barebones.Drawable.Particles
         public override void Update()
         {
             base.Update();
-            _sprite.UpdateSprite();
+            _sprite.Update();
             _sprite.Rotation += _angularSpeed;
         }
         public override void Draw()

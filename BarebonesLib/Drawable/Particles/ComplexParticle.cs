@@ -36,7 +36,7 @@ namespace Barebones.Drawable.Particles
                 _sprite.SpriteEffect = _parentSystem.MonitorSprite.SpriteEffect;
                 _sprite.ChangeAnimation(_parentSystem.MonitorSprite.CurrentAnimationName);
             }
-            _sprite.UpdateSprite();
+            _sprite.Update();
             _sprite.Rotation += _angularSpeed;
         }
         public override void Draw()

@@ -81,7 +81,7 @@ namespace Barebones.Drawable
         /// <summary>
         /// Update the sprite.
         /// </summary>
-        public abstract void UpdateSprite();
+        public abstract void Update();
 
         /// <summary>
         /// Draw the sprite at a given position.

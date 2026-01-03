@@ -248,6 +248,16 @@ namespace Barebones
             get { return _targetGraphWrapSelection; }
         }
 
+        private static bool _isClosing = false;
+
+        /// <summary>
+        /// Is the game shutting down?
+        /// </summary>
+        public static bool IsClosing
+        {
+            get { return _isClosing; }
+        }
+
         private static KeyboardState _oldKeyboardState;
 
         internal static KeyboardState OldKeyboardState
@@ -354,6 +364,7 @@ namespace Barebones
         /// </summary>
         public static void Close()
         {
+            _isClosing = true;
             Verbose.Close();
             ParticleHandler.Close();
         }

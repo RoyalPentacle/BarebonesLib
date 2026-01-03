@@ -159,7 +159,7 @@ namespace Barebones.Drawable
         /// </summary>
         public void Update()
         {
-            _font.UpdateSprite();
+            _font.Update();
             if (_font.IsColourizing)
             {
                 for (int i = 0; i < _letterColour.Length; i++)

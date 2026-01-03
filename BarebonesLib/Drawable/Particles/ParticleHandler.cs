@@ -24,13 +24,6 @@ namespace Barebones.Drawable.Particles
 
         private readonly static Barrier _particleBarrier = new Barrier(1);
 
-        private static bool _isClosing = false;
-
-        internal static bool IsClosing
-        { 
-            get { return _isClosing; } 
-        }
-
         /// <summary>
         /// A list of all current particle systems.
         /// </summary>
@@ -74,7 +67,7 @@ namespace Barebones.Drawable.Particles
 
         internal static void Close()
         {
-            _isClosing = true;
+            _particleBarrier.RemoveParticipant(); // Remove the game from the barrier, so all the particle systems can self terminate.
         }
 
         internal static void Update()

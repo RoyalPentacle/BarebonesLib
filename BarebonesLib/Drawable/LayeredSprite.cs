@@ -77,7 +77,7 @@ namespace Barebones.Drawable
                 _sprite.Rotation = _rotation;
                 if (_attachPointMonitor != null)
                     _sprite.Rotation += _attachPointMonitor.Rotation;
-                _sprite.UpdateSprite();
+                _sprite.Update();
             }
 
             /// <summary>

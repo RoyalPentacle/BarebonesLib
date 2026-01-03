@@ -407,7 +407,7 @@ namespace Barebones.Drawable
         /// <summary>
         /// Update the sprite.
         /// </summary>
-        public override void UpdateSprite()
+        public override void Update()
         {
             UpdateColour();
             UpdateScale();

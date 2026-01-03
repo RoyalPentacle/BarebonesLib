@@ -228,7 +228,7 @@ namespace Barebones.Drawable.Particles
 
         private void Update()
         {
-            while (true)
+            while (!Engine.IsClosing)
             {
                 ParticleHandler.ParticleBarrier.SignalAndWait();
                 if (_monitorPosition != null)
