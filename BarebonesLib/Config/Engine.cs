@@ -5,14 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using NLua;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barebones
 {
@@ -246,6 +239,7 @@ namespace Barebones
         public static bool TargetGraphWrapSelection
         {
             get { return _targetGraphWrapSelection; }
+            set { _targetGraphWrapSelection = value; }
         }
 
         private static bool _isClosing = false;
@@ -272,8 +266,47 @@ namespace Barebones
             get { return _newKeyboardState; }
         }
 
+        private static float _masterVolume = 1.0f;
         private static float _musicVolume = 1.0f;
         private static float _soundVolume = 1.0f;
+
+        private static bool _masterMute = false;
+        private static bool _musicMute = false;
+        private static bool _soundMute = false;
+
+        /// <summary>
+        /// Mute all audio.
+        /// </summary>
+        public static bool MasterMute
+        {
+            get { return _masterMute; }
+            set 
+            {
+                if (value)
+                    SoundEffect.MasterVolume = 0f;
+                else
+                    SoundEffect.MasterVolume = _masterVolume;
+                _masterMute = value; 
+            }
+        }
+
+        /// <summary>
+        /// Mute music.
+        /// </summary>
+        public static bool MusicMute
+        {
+            get { return _musicMute; }
+            set { _musicMute = value; }
+        }
+
+        /// <summary>
+        /// Mute sounds.
+        /// </summary>
+        public static bool SoundMute
+        {
+            get { return _soundMute; }
+            set { _soundMute = value; }
+        }
 
         /// <summary>
         /// Gets and sets the master volume for all sound effects and music.
@@ -282,8 +315,28 @@ namespace Barebones
         /// </summary>
         public static float MasterVolume
         {
-            get { return SoundEffect.MasterVolume; }
-            set { SoundEffect.MasterVolume = (float)Math.Clamp(value, 0.0, 1.0); }
+            get 
+            {
+                if (!_masterMute)
+                {
+                    SoundEffect.MasterVolume = _masterVolume;
+                    return _masterVolume;
+                }
+                else
+                {
+                    SoundEffect.MasterVolume = 0f;
+                    return 0f;
+                }
+            }
+            set 
+            {
+                float vol = value * 100;
+                vol = (float)Math.Round(vol);
+                vol /= 100f;
+                _masterVolume = (float)Math.Clamp(vol, 0.0, 1.0);
+                SoundEffect.MasterVolume = _masterVolume;
+                _masterMute = false;
+            }
         }
 
         /// <summary>
@@ -292,8 +345,21 @@ namespace Barebones
         /// </summary>
         public static float MusicVolume
         {
-            get { return _musicVolume; }
-            set { _musicVolume = (float)Math.Clamp(value, 0.0, 1.0); }
+            get 
+            { 
+                if (!_musicMute)
+                    return _musicVolume;
+                else 
+                    return 0f;
+            }
+            set 
+            {
+                float vol = value * 100;
+                vol = (float)Math.Round(vol);
+                vol /= 100f;
+                _musicVolume = (float)Math.Clamp(vol, 0.0, 1.0);
+                _musicMute = false;
+            }
         }
 
         /// <summary>
@@ -302,8 +368,21 @@ namespace Barebones
         /// </summary>
         public static float SoundVolume
         {
-            get { return _soundVolume; }
-            set { _soundVolume = (float)Math.Clamp(value, 0.0, 1.0); }
+            get 
+            { 
+                if (!_soundMute)
+                    return _soundVolume;
+                else
+                    return 0f;
+            }
+            set 
+            {
+                float vol = value * 100;
+                vol = (float)Math.Round(vol);
+                vol /= 100f;
+                _soundVolume = (float)Math.Clamp(vol, 0.0, 1.0);
+                _soundMute = false;
+            }
         }
 
         /// <summary>

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Barebones.Interfaces
+﻿namespace Barebones.Interfaces
 {
     /// <summary>
     /// Classes that implement this interface can determine their visibility for targetable things.

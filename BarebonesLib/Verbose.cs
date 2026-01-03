@@ -1,7 +1,4 @@
-﻿using Barebones.Config;
-using System.Collections.Concurrent;
-using System.ComponentModel.Design;
-using System.Reflection.Metadata;
+﻿using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 namespace Barebones
@@ -17,7 +14,7 @@ namespace Barebones
         [DllImport("kernel32.dll", EntryPoint = "AllocConsole", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         static extern int AllocConsole();
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport("kernel32.dll", EntryPoint = "CancelIoEx", SetLastError = true, CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         private static extern bool CancelIoEx(IntPtr handle, IntPtr lpOverlapped);
 
         const int STD_INPUT_HANDLE = -10;

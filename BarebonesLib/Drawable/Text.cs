@@ -1,10 +1,5 @@
 ﻿using Barebones.Interfaces;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barebones.Drawable
 {
@@ -19,6 +14,8 @@ namespace Barebones.Drawable
         private int _textWidth;
         private int _textHeight;
         private float _scale;
+
+        private string _fontPath;
 
         private Color[] _letterColour;
 
@@ -55,6 +52,22 @@ namespace Barebones.Drawable
         }
 
         /// <summary>
+        /// The scale of the Text.
+        /// </summary>
+        public float Scale
+        {
+            get { return _scale; }
+        }
+
+        /// <summary>
+        /// The path to the SpriteScript for the font used.
+        /// </summary>
+        public string FontPath
+        {
+            get { return _fontPath; }
+        }
+
+        /// <summary>
         /// Construct a new text with default scaling.
         /// </summary>
         /// <param name="text">The string to display.</param>
@@ -73,6 +86,7 @@ namespace Barebones.Drawable
         public Text(string text, string scriptPath, float scale)
         {
             _font = new ComplexSprite(scriptPath);
+            _fontPath = scriptPath;
             _scale = scale;
             _font.SetScale(scale, scale);
             ChangeText(text);
@@ -97,9 +111,9 @@ namespace Barebones.Drawable
         /// Does not cancel active colourization.
         /// </summary>
         /// <param name="colours">A list of colours corrseponding to the characters in the text.</param>
-        public void SetColour(List<Color> colours)
+        public void SetColour(Color[] colours)
         {
-            for (int i = 0; i < _letterColour?.Length && i < colours.Count; i++)
+            for (int i = 0; i < _letterColour?.Length && i < colours.Length; i++)
             {
                 _letterColour[i] = colours[i];
             }
@@ -187,7 +201,7 @@ namespace Barebones.Drawable
             {
                 if (!_font.IsColourizing)
                 {
-                    _font.SetColour(_letterColour[0]);
+                    _font.SetColour(_letterColour[i]);
                 }
 
                 _font.ChangeAnimation(_animArray[i]);

@@ -1,17 +1,6 @@
 ﻿using Barebones.Asset.Scripts;
-using Barebones.Asset;
-using Barebones.Config;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Microsoft.VisualBasic;
-using System.Runtime.Intrinsics.X86;
-using System.Runtime.InteropServices;
 
 namespace Barebones.Drawable
 {

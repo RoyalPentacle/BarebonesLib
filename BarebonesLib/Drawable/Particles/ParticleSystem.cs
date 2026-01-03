@@ -1,15 +1,7 @@
 ﻿using Barebones.Asset;
 using Barebones.Asset.Scripts;
-using Barebones.Drawable.Particles;
 using Barebones.Interfaces;
 using Microsoft.Xna.Framework;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barebones.Drawable.Particles
 {

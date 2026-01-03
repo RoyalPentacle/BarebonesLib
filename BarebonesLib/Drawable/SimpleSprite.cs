@@ -1,13 +1,6 @@
-﻿using Barebones.Asset;
-using Barebones.Asset.Scripts;
-using Barebones.Config;
+﻿using Barebones.Asset.Scripts;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barebones.Drawable
 {

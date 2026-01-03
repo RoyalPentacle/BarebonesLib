@@ -145,6 +145,10 @@ namespace Barebones.Asset
 
         private byte[] ReadOgg()
         {
+            if (_dynamicOgg != null)
+            {
+                _dynamicOgg.Volume = Engine.MusicVolume;
+            }
             if (_reader != null)
             {
                 float[] buffer = new float[_channels * _sampleRate / 5];
