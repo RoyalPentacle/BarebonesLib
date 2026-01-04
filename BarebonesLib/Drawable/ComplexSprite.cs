@@ -410,7 +410,21 @@ namespace Barebones.Drawable
             base.Update();
         }
 
-
+        /// <summary>
+        /// Get the animation of the specified name, if it exists, otherwise gets "IDLE".
+        /// </summary>
+        /// <param name="animName">The name of the animation.</param>
+        /// <param name="animation">The output animation.</param>
+        /// <returns>True if the animation exists, False otherwise.</returns>
+        public bool GetAnimation(string animName, out Anim? animation)
+        {
+            if (_animations.TryGetValue(animName, out animation))
+                return true;
+            else
+                animation = _animations["IDLE"];
+            return false;
+            
+        }
 
         /// <summary>
         /// Draw the sprite at a given position.

@@ -160,7 +160,7 @@ namespace Barebones.Drawable
                     {
                         Verbose.WriteErrorMinor($"Could not find char: {_animArray[i]} in font {_font.TexturePath}");
                         _animArray[i] = "MISS";
-                        _textWidth = (int)(_textWidth + _font.Animations["MISS"].Frames[0].Width * _scale);
+                        _textWidth = (int)(_textWidth + 16 * _scale);
                     }
                     _letterColour[i] = Color.White;
 
