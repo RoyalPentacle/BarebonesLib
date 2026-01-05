@@ -438,7 +438,7 @@ namespace Barebones.Drawable
                 _cullRec.Y = (int)position.Y - _cullRec.Height / 2 ;
                 _lastPosition = position;
                 if (_cullRec.Intersects(Engine.Camera.VisibleArea))
-                    Engine.SpriteBatch.Draw(_texture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
+                        Engine.SpriteBatch.Draw(_texture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
             }
         }
 

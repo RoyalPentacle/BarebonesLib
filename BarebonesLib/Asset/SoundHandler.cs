@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Audio;
 using Barebones.Config;
 using Barebones.Asset.Scripts;
+using System.ComponentModel.Design;
 
 namespace Barebones.Asset
 {
@@ -146,24 +147,25 @@ namespace Barebones.Asset
         /// <returns>A SoundEffect.</returns>
         public static SoundEffect GetSound(string soundPath)
         {
-            try // Try to get the sound from the dictionary
+            try
             {
                 _mutex.WaitOne();
-                SoundMap sound = _soundDict[soundPath];
-                sound.Count++;
-                return sound.Sound;
+                if (_soundDict.TryGetValue(soundPath, out SoundMap sound))
+                {
+                    sound.Count++;
+                    return sound.Sound;
+                }
+                else
+                {
+                    LoadSound(soundPath);
+                    return _soundDict[soundPath].Sound;
+                }
             }
-            catch // If we can't, load it instead and return that.
+            finally
             {
-                LoadSound(soundPath);
-                return _soundDict[soundPath].Sound;
-            }
-            finally 
-            { 
-                _mutex.ReleaseMutex(); 
+                _mutex.ReleaseMutex();
             }
         }
-
         /// <summary>
         /// Loads a sound into our sound dictionary.
         /// </summary>
@@ -171,11 +173,7 @@ namespace Barebones.Asset
         private static void LoadSound(string soundPath)
         {
             // Create sound definition
-            try 
-            {
-                GetSoundFromCache(soundPath);
-            }
-            catch 
+            if (!GetSoundFromCache(soundPath))
             {
                 SoundMap newSound = new SoundMap(soundPath);
                 _soundDict.Add(soundPath, newSound);
@@ -229,14 +227,19 @@ namespace Barebones.Asset
         /// Move the specified sound from the cache into active use.
         /// </summary>
         /// <param name="soundPath">The name of the sound.</param>
-        private static void GetSoundFromCache(string soundPath)
+        private static bool GetSoundFromCache(string soundPath)
         {
-            SoundMap sound = _soundCache[soundPath];
-            _soundCache.Remove(soundPath);
-            _sortedCache.Remove(soundPath);
-            _cacheSize -= sound.FileSize;
-            sound.Count++;
-            _soundDict.Add(soundPath, sound);
+            if (_soundCache.TryGetValue(soundPath, out SoundMap sound))
+            {
+                _soundCache.Remove(soundPath);
+                _sortedCache.Remove(soundPath);
+                _cacheSize -= sound.FileSize;
+                sound.Count++;
+                _soundDict.Add(soundPath, sound);
+                return true;
+            }
+            else
+                return false;
         }
 
         /// <summary>

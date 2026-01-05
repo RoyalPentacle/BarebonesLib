@@ -195,14 +195,16 @@ namespace Barebones.Asset
             try // Try to get the texture from the dictionary
             {
                 _mutex.WaitOne();
-                TextureMap tex = _textureDict[texturePath];
-                tex.Count++;
-                return tex.Texture;
-            }
-            catch // If we can't, load it instead and return that.
-            {
-                LoadTexture(texturePath);
-                return _textureDict[texturePath].Texture;
+                if (_textureDict.TryGetValue(texturePath, out TextureMap tex))
+                {
+                    tex.Count++;
+                    return tex.Texture;
+                }
+                else
+                {
+                    LoadTexture(texturePath);
+                    return _textureDict[texturePath].Texture;
+                }
             }
             finally
             {
@@ -229,15 +231,11 @@ namespace Barebones.Asset
         /// <param name="texturePath">The name of the texture to load.</param>
         private static void LoadTexture(string texturePath)
         {
-            try
-            {
-                GetTextureFromCache(texturePath);
-            }
-            catch
-            {
-                TextureMap newTex = new TextureMap(texturePath);
-                _textureDict.Add(texturePath, newTex);
-            }
+                if (!GetTextureFromCache(texturePath))
+                {
+                    TextureMap newTex = new TextureMap(texturePath);
+                    _textureDict.Add(texturePath, newTex);
+                }
         }
 
         /// <summary>
@@ -287,14 +285,19 @@ namespace Barebones.Asset
         /// Retrieves the specified texture from the cache.
         /// </summary>
         /// <param name="texturePath">The name of the texture to get.</param>
-        private static void GetTextureFromCache(string texturePath)
+        private static bool GetTextureFromCache(string texturePath)
         {
-            TextureMap tex = _textureCache[texturePath];
-            _textureCache.Remove(texturePath);
-            _sortedCache.Remove(texturePath);
-            _cacheSize -= tex.FileSize;
-            tex.Count++;
-            _textureDict.Add(texturePath, tex);
+            if (_textureCache.TryGetValue(texturePath, out TextureMap tex))
+            {
+                _textureCache.Remove(texturePath);
+                _sortedCache.Remove(texturePath);
+                _cacheSize -= tex.FileSize;
+                tex.Count++;
+                _textureDict.Add(texturePath, tex);
+                return true;
+            }
+            else
+                return false;
         }
 
         /// <summary>
