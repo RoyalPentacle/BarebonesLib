@@ -1,6 +1,8 @@
 ﻿using Barebones.Asset.Scripts;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
+using System.Collections.Frozen;
 
 namespace Barebones.Drawable
 {
@@ -207,6 +209,12 @@ namespace Barebones.Drawable
 
         private Dictionary<string, Anim> _animations;
 
+        private Dictionary<uint, Color>[] _colourPalettes;
+
+        private int _currentPalette = -1;
+
+        private Texture2D? _colouredTexture;
+
         private Vector2 _lastPosition;
 
         private Anim _currentAnimation;
@@ -279,6 +287,22 @@ namespace Barebones.Drawable
             get { return _isColourizing; }
         }
 
+        /// <summary>
+        /// The number of palettes available to this sprite.
+        /// </summary>
+        /// <remarks>
+        /// Not including the default appearance.
+        /// </remarks>
+        public int PaletteCount
+        {
+            get 
+            { 
+                if (_colourPalettes != null)
+                    return _colourPalettes.Length;
+                else 
+                    return 0;
+            }
+        }
 
         /// <summary>
         /// Construct a new sprite from a path to a SpriteScript.
@@ -309,6 +333,7 @@ namespace Barebones.Drawable
             }
             ChangeAnimation(script.DefaultAnim);
             _colour = Color.White;
+            _colourPalettes = script.ColourPalettes;
         }
 
         #region Animation Functions
@@ -401,6 +426,97 @@ namespace Barebones.Drawable
         }
         #endregion
 
+        #region Palette Swap Functions
+
+        /// <summary>
+        /// Changes the palette of the sprite to the specified index.
+        /// </summary>
+        /// <remarks>
+        /// This is a software colour replacement. Specific RGBA values swapped for other specific RGBA values.
+        /// Do not do this very often, it's fairly expensive.
+        /// </remarks>
+        /// <param name="paletteIndex">The index of the colour palette. -1 to revert to default.</param>
+        public void ChangePalette(int paletteIndex)
+        {
+            if (paletteIndex != _currentPalette)
+            {
+                _currentPalette = paletteIndex;
+                if (paletteIndex <= -1)
+                {
+                    _currentPalette = -1;
+                    _colouredTexture?.Dispose();
+                    _colouredTexture = null;
+                }
+                else if (_colourPalettes != null && paletteIndex < _colourPalettes.Length)
+                {
+                    if (_texture != null)
+                    {
+                        _colouredTexture?.Dispose();
+                        _colouredTexture = null;
+                        Dictionary<uint, Color> palette = _colourPalettes[(int)paletteIndex];
+                        Color[] pixels = new Color[_texture.Width * _texture.Height];
+                        _texture.GetData(pixels);
+                        for (int i = 0; i < pixels.Length; i++)
+                        {
+                            if (pixels[i] == Color.Transparent)
+                                continue;
+                            else
+                            {
+                                if (palette.TryGetValue(pixels[i].PackedValue, out Color col))
+                                    pixels[i] = col;
+                            }
+                        }
+                        _colouredTexture = new Texture2D(Engine.Graphics.GraphicsDevice, _texture.Width, _texture.Height);
+                        _colouredTexture.SetData(pixels);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Revert to the default colour palette for the sprite.
+        /// </summary>
+        public void RevertToDefaultPalette()
+        {
+            ChangePalette(-1);
+        }
+
+        /// <summary>
+        /// Cycle the colour palette to the next set in the array.
+        /// </summary>
+        /// <remarks>
+        /// If at the end of the array, wraps back to the default appearance.
+        /// </remarks>
+        public void IncrementPalette()
+        {
+            if (_colourPalettes != null)
+            {
+                int nextPalette = _currentPalette + 1;
+                if (nextPalette >= _colourPalettes.Length)
+                    nextPalette = -1;
+                ChangePalette(nextPalette);
+            }
+        }
+
+        /// <summary>
+        /// Cycle the colour palette to the previous set in the array.
+        /// </summary>
+        /// <remarks>
+        /// If at the start of the array, wraps to the end of the array.
+        /// </remarks>
+        public void DecrementPalette()
+        {
+            if (_colourPalettes != null)
+            {
+                int prevPalette = _currentPalette - 1;
+                if (prevPalette < -1)
+                    prevPalette = _colourPalettes.Length - 1;
+                ChangePalette(prevPalette);
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// Update the sprite.
         /// </summary>
@@ -408,6 +524,16 @@ namespace Barebones.Drawable
         {
             UpdateAnimation();
             base.Update();
+        }
+
+        /// <summary>
+        /// Unload the current sprite.
+        /// </summary>
+        public override void UnloadSprite()
+        {
+            _colouredTexture?.Dispose();
+            _colouredTexture = null;
+            base.UnloadSprite();
         }
 
         /// <summary>
@@ -438,7 +564,12 @@ namespace Barebones.Drawable
                 _cullRec.Y = (int)position.Y - _cullRec.Height / 2 ;
                 _lastPosition = position;
                 if (_cullRec.Intersects(Engine.Camera.VisibleArea))
+                {
+                    if (_colouredTexture == null)
                         Engine.SpriteBatch.Draw(_texture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
+                    else
+                        Engine.SpriteBatch.Draw(_colouredTexture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
+                }
             }
         }
 

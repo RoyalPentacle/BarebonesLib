@@ -72,7 +72,7 @@ namespace Barebones.Drawable
         /// <summary>
         /// Unload the current sprite.
         /// </summary>
-        public void UnloadSprite()
+        public virtual void UnloadSprite()
         {
             Textures.UnloadTexture(_texturePath);
             _texture = null;

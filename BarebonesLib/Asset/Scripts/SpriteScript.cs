@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Barebones.Drawable;
+using Microsoft.Xna.Framework;
+using System.Collections.Frozen;
 
 namespace Barebones.Asset.Scripts
 {
@@ -16,6 +18,10 @@ namespace Barebones.Asset.Scripts
 
         [JsonProperty]
         private string _defaultAnim;
+
+        [JsonProperty]
+        private Dictionary<uint, Color>[] _colourPalettes;
+
 
         /// <summary>
         /// The path to the texture for the sprite.
@@ -41,6 +47,15 @@ namespace Barebones.Asset.Scripts
         public Dictionary<string, ComplexSprite.Anim> Anims
         {
             get { return _anims; }
+        }
+
+        /// <summary>
+        /// The array of dictionaries for colour replacements.
+        /// </summary>
+        [JsonIgnore]
+        public Dictionary<uint, Color>[] ColourPalettes
+        {
+            get { return _colourPalettes; }
         }
 
         /// <summary>
