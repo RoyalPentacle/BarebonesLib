@@ -12,18 +12,30 @@ namespace Barebones.Asset
     public static class Music
     {
         private static OggSong _song;
-
         private static readonly List<DynamicSoundEffectInstance> _instanceList = new List<DynamicSoundEffectInstance>();
 
         /// <summary>
         /// Play the music from the specified music script.
+        /// Does nothing if the current music is playing.
         /// </summary>
         /// <param name="musicScript">The path to the music script to play.</param>
         public static void Play(string musicScript)
         {
-            _song?.Stop();
-            _song = new OggSong(musicScript);
-            _song?.Play();
+            if (_song != null)
+            {
+                if (musicScript != _song.MusicScriptPath || _song.State == SoundState.Stopped)
+                {
+                    _song.Stop();
+                    _song = new OggSong(musicScript);
+                    _song?.Play();
+                }
+            }
+            else
+            {
+                _song?.Stop();
+                _song = new OggSong(musicScript);
+                _song?.Play();
+            }
         }
 
         /// <summary>
@@ -73,6 +85,16 @@ namespace Barebones.Asset
 
         private VorbisReader? _reader;
 
+        private string _musicScriptPath;
+
+        /// <summary>
+        /// The path to the musicscript being played by this instance.
+        /// </summary>
+        public string MusicScriptPath
+        {
+            get { return _musicScriptPath; }
+        }
+
         /// <summary>
         /// Get and Set the volume of the music track.
         /// Defaults to Engine.MusicVolume.
@@ -113,6 +135,21 @@ namespace Barebones.Asset
             }
         }
         
+        /// <summary>
+        /// The SoundState of the currently playing song.
+        /// </summary>
+        public SoundState State
+        {
+            get {
+                if (_dynamicOgg != null)
+                {
+                    return _dynamicOgg.State;
+                }
+                else
+                    return SoundState.Stopped;
+            }
+        }
+
         /// <summary>
         /// Create a new OggSong from the specified music script.
         /// </summary>
