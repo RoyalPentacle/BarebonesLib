@@ -233,6 +233,17 @@ namespace Barebones.Drawable
 
         private bool _ignoreLua = false;
 
+        private bool _ignoreCulling = false;
+
+        /// <summary>
+        /// Always draw the sprite regardless of position relative to the camera.
+        /// </summary>
+        public bool IgnoreCulling
+        {
+            get { return _ignoreCulling; }
+            set { _ignoreCulling = value; }
+        }
+
         /// <summary>
         /// The last position this sprite was drawn to.
         /// </summary>
@@ -563,7 +574,7 @@ namespace Barebones.Drawable
                 _cullRec.X = (int)position.X - _cullRec.Width / 2;
                 _cullRec.Y = (int)position.Y - _cullRec.Height / 2 ;
                 _lastPosition = position;
-                if (_cullRec.Intersects(Engine.Camera.VisibleArea))
+                if (_ignoreCulling || _cullRec.Intersects(Engine.Camera.VisibleArea))
                 {
                     if (_colouredTexture == null)
                         Engine.SpriteBatch.Draw(_texture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
