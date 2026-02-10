@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework.Input;
+﻿using Barebones.Windows;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -16,6 +18,68 @@ namespace Barebones.Config
     {
 
         private static readonly ConcurrentDictionary<string, Keys> _boundControls = new ConcurrentDictionary<string, Keys>();
+
+
+        private static Action<char>? _inputDelegate;
+
+        /// <summary>
+        /// Set the input delegate to hijack the text input for the window.
+        /// </summary>
+        /// <param name="inputDelegate"></param>
+        public static void SetInputDelegate(Action<char> inputDelegate)
+        {
+            _inputDelegate = inputDelegate;
+        }
+
+        /// <summary>
+        /// Clear the input delegate when you no longer need text input.
+        /// </summary>
+        public static void ClearInputDelegate()
+        {
+            _inputDelegate = null;
+        }
+
+        internal static void TextInputHandler(object? sender, TextInputEventArgs e)
+        {
+            char c = e.Character;
+            if (_inputDelegate != null)
+            {
+                _inputDelegate.Invoke(c);
+            }
+        }
+
+        /// <summary>
+        /// Is text input currently being hijacked.
+        /// </summary>
+        public static bool InputHijacked
+        {
+            get { return _inputDelegate != null; }
+        }
+
+        /// <summary>
+        /// The location of the mouse relative to the game window.
+        /// </summary>
+        /// <remarks>Use the <see cref="Camera2D.DeprojectScreenPosition(Point)"/> function to get the position relative to the game world.</remarks>
+        public static Point MousePosition
+        {
+            get { return Engine.NewMouseState.Position; }
+        }
+
+        /// <summary>
+        /// The distance the mouse has moved since the last frame.
+        /// </summary>
+        public static Point MouseMovement
+        {
+            get { return Engine.NewMouseState.Position - Engine.OldMouseState.Position; }
+        }
+
+        /// <summary>
+        /// Is a window currently blocking the mouse cursor from interacting with the game underneath?
+        /// </summary>
+        public static bool WindowClicked
+        {
+            get { return WindowHandler.WindowClicked; }
+        }
 
         /// <summary>
         /// Loads the keybinds from the path.
@@ -155,5 +219,69 @@ namespace Barebones.Config
         {
             return Engine.OldKeyboardState[key] == KeyState.Down && Engine.NewKeyboardState[key] == KeyState.Up;
         }
+
+        /// <summary>
+        /// Checks if the left mouse button was pressed this frame.
+        /// </summary>
+        /// <remarks> I'd like to replace this with something more modular like how key presses are set up, but they don't make it easy.</remarks>
+        /// <returns>True if the left mouse button was just clicked. False otherwise.</returns>
+        public static bool LeftClickPressed()
+        {
+            return Engine.OldMouseState.LeftButton == ButtonState.Released && Engine.NewMouseState.LeftButton == ButtonState.Pressed;
+        }
+
+        /// <summary>
+        /// Checks if the left mouse button is being held.
+        /// </summary>
+        /// <remarks> I'd like to replace this with something more modular like how key presses are set up, but they don't make it easy.</remarks>
+        /// <returns>True if the left mouse button is being held. False otherwise.</returns>
+        public static bool LeftClickHeld()
+        {
+            return Engine.NewMouseState.LeftButton == ButtonState.Pressed;
+        }
+
+        /// <summary>
+        /// Checks if the left mouse button was released this frame.
+        /// Only if the button was pressed the previous frame.
+        /// </summary>
+        /// <remarks> I'd like to replace this with something more modular like how key presses are set up, but they don't make it easy.</remarks>
+        /// <returns>True if the button was released. False otherwise.</returns>
+        public static bool LeftClickReleased()
+        {
+            return Engine.OldMouseState.LeftButton == ButtonState.Pressed && Engine.NewMouseState.LeftButton == ButtonState.Released;
+        }
+
+
+        /// <summary>
+        /// Checks if the Right mouse button was pressed this frame.
+        /// </summary>
+        /// <remarks> I'd like to replace this with something more modular like how key presses are set up, but they don't make it easy.</remarks>
+        /// <returns>True if the Right mouse button was just clicked. False otherwise.</returns>
+        public static bool RightClickPressed()
+        {
+            return Engine.OldMouseState.RightButton == ButtonState.Released && Engine.NewMouseState.RightButton == ButtonState.Pressed;
+        }
+
+        /// <summary>
+        /// Checks if the Right mouse button is being held.
+        /// </summary>
+        /// <remarks> I'd like to replace this with something more modular like how key presses are set up, but they don't make it easy.</remarks>
+        /// <returns>True if the Right mouse button is being held. False otherwise.</returns>
+        public static bool RightClickHeld()
+        {
+            return Engine.NewMouseState.RightButton == ButtonState.Pressed;
+        }
+
+        /// <summary>
+        /// Checks if the Right mouse button was released this frame.
+        /// Only if the button was pressed the previous frame.
+        /// </summary>
+        /// <remarks> I'd like to replace this with something more modular like how key presses are set up, but they don't make it easy.</remarks>
+        /// <returns>True if the button was released. False otherwise.</returns>
+        public static bool RightClickReleased()
+        {
+            return Engine.OldMouseState.RightButton == ButtonState.Pressed && Engine.NewMouseState.RightButton == ButtonState.Released;
+        }
+
     }
 }

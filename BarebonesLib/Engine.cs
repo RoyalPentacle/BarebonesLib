@@ -1,6 +1,7 @@
 ﻿using Barebones.Asset;
 using Barebones.Drawable.Particles;
 using Barebones.Network;
+using Barebones.Windows;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -266,6 +267,20 @@ namespace Barebones
             get { return _newKeyboardState; }
         }
 
+        private static MouseState _oldMouseState;
+
+        internal static MouseState OldMouseState
+        {
+            get { return _oldMouseState; }
+        }
+
+        private static MouseState _newMouseState;
+
+        internal static MouseState NewMouseState
+        {
+            get { return _newMouseState; }
+        }
+
         private static float _masterVolume = 1.0f;
         private static float _musicVolume = 1.0f;
         private static float _soundVolume = 1.0f;
@@ -401,6 +416,7 @@ namespace Barebones
             _spriteBatch = new SpriteBatch(_graphicsDevice.GraphicsDevice);
             Asset.Textures.Shared.Init();
             Asset.Sound.Shared.Init();
+            Game.Window.TextInput += Config.Control.TextInputHandler;
             _luaState = new NLua.Lua();
             _luaState.LoadCLRPackage();
             Lua.Functions.RunScript(@"
@@ -419,7 +435,9 @@ namespace Barebones
         {
             _gameTime = gameTime;
             _newKeyboardState = Keyboard.GetState();
+            _newMouseState = Mouse.GetState();
             ParticleHandler.Update();
+            WindowHandler.Update();
         }
 
         /// <summary>
@@ -436,6 +454,7 @@ namespace Barebones
             Verbose.PrintConsoleOutput();
             ShowStatus();
             _oldKeyboardState = _newKeyboardState;
+            _oldMouseState = _newMouseState;
         }
 
         /// <summary>

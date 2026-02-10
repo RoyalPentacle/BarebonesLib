@@ -157,6 +157,7 @@ namespace Barebones.Asset
         public OggSong(string scriptPath)
         {
             MusicScript script = ScriptFinder.FindScript<MusicScript>(scriptPath);
+            _musicScriptPath = scriptPath;
             try
             {
                 _reader = new VorbisReader(script.MusicPath);

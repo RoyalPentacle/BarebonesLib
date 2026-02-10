@@ -112,6 +112,7 @@ namespace Barebones
                 ConsoleKeyInfo? input = null;
                 try
                 {
+                    Thread.Sleep(50);
                     input = Console.ReadKey(true);
                 }
                 catch { }
