@@ -14,7 +14,7 @@ namespace Barebones.Windows
     public static class WindowHandler
     {
         internal static readonly List<Window> _windows = new List<Window>();
-
+        internal static Dictionary<string, Window> _windowDict = new Dictionary<string, Window>();
         private static bool _windowClicked = false;
 
         internal static bool WindowClicked
@@ -29,7 +29,16 @@ namespace Barebones.Windows
         /// <param name="window">The window to register.</param>
         public static void RegisterWindow(Window window)
         {
-            _windows.Add(window);
+            if (!_windowDict.ContainsKey(window.Name))
+            {
+                _windowDict.Add(window.Name, window);
+                _windows.Add(window);
+            }
+            else
+            {
+                Verbose.WriteErrorMajor($"WINDOW: Tried to create window with name '{window.Name}', but a window with that name already exists!");
+                window.Unload();
+            }
         }
 
         /// <summary>
@@ -40,6 +49,7 @@ namespace Barebones.Windows
         public static void DeregisterWindow(Window window)
         {
             _windows.Remove(window);
+            _windowDict.Remove(window.Name);
         }
 
         internal static void Update()

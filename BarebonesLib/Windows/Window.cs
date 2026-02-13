@@ -2,6 +2,7 @@
 using Barebones.Config;
 using Barebones.Drawable;
 using Barebones.Interfaces;
+using Barebones.Windows.Controls;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -17,6 +18,8 @@ namespace Barebones.Windows
     /// </summary>
     public class Window
     {
+        private string _name;
+
         private Rectangle _bounds;
         private Rectangle _handle;
         private Point _maximizedSize;
@@ -53,9 +56,18 @@ namespace Barebones.Windows
             get { return _spriteScriptPath; }
         }
 
+        /// <summary>
+        /// The name of the window.
+        /// </summary>
+        public string Name
+        {
+            get { return _name; }
+        }
+
         private List<IControl> _controls;
-        private Button _closeButton;
-        private Button _minimizeButton;
+        private Dictionary<string, IControl> _controlDict;
+        private ImageButton _closeButton;
+        private ImageButton _minimizeButton;
 
         private bool _isMinimized = false;
 
@@ -80,15 +92,26 @@ namespace Barebones.Windows
         }
 
         /// <summary>
+        /// The location of the window.
+        /// </summary>
+        public Point Location
+        {
+            get { return _bounds.Location; }
+            set { _bounds.Location = value; }
+        }
+
+        /// <summary>
         /// Construct a new window with the specified arguments.
         /// </summary>
+        /// <param name="name">The name of the window.</param>
         /// <param name="spriteScript">The path to the SpriteScript to load for the window resources.</param>
         /// <param name="bounds">The bounds of the window</param>
         /// <param name="title">The title of the window</param>
         /// <param name="fontScriptPath">The path to the SpriteScript for the font in the window.</param>
-        public Window(string spriteScript, Rectangle bounds, string title, string fontScriptPath)
+        public Window(string name, string spriteScript, Rectangle bounds, string title, string fontScriptPath)
         {
             _spriteScriptPath = spriteScript;
+            _name = name;
             _bounds = bounds;
             _maximizedSize = _bounds.Size;
             if (!string.IsNullOrEmpty(title))
@@ -133,8 +156,8 @@ namespace Barebones.Windows
             if (_hasHandle)
             {
                 _handle = new Rectangle(0, 0, bounds.Width, 32);
-                _closeButton = new Button("CLOSE", new Rectangle(bounds.Width - 31, 1, 30, 30), this, Close);
-                _minimizeButton = new Button("MINIMIZE", new Rectangle(bounds.Width - 63, 1, 30, 30), this, Minimize);
+                _closeButton = new ImageButton("close", "CLOSE", new Rectangle(bounds.Width - 31, 1, 30, 30), this, Close);
+                _minimizeButton = new ImageButton("mini", "MINIMIZE", new Rectangle(bounds.Width - 63, 1, 30, 30), this, Minimize);
                 _handleBackground = new ComplexSprite(spriteScript);
                 _handleBackground.IgnoreCulling = true;
                 _handleBackground.ChangeAnimation("HANDLEBACKGROUND");
@@ -171,6 +194,7 @@ namespace Barebones.Windows
 
 
             _controls = new List<IControl>();
+            _controlDict = new Dictionary<string, IControl>();
             WindowHandler.RegisterWindow(this);
         }
 
@@ -178,9 +202,10 @@ namespace Barebones.Windows
         /// Constructs a new window from the specified arguments.
         /// </summary>
         /// <remarks>This creates a window with no handle. Thus, you cannot move, close or minimize the window through the handle.</remarks>
+        /// <param name="name">The name of the window.</param>
         /// <param name="spriteScript">The path to the SpriteScript to load for the window resources.</param>
         /// <param name="bounds">The bounds of the window</param>
-        public Window(string spriteScript, Rectangle bounds) : this(spriteScript, bounds, string.Empty, string.Empty)
+        public Window(string name, string spriteScript, Rectangle bounds) : this(name, spriteScript, bounds, string.Empty, string.Empty)
         {
 
         }
@@ -264,7 +289,16 @@ namespace Barebones.Windows
         /// <param name="control"></param>
         public void RegisterControl(IControl control)
         {
-            _controls.Add(control);
+            if (!_controlDict.ContainsKey(control.Name))
+            {
+                _controlDict.Add(control.Name, control);
+                _controls.Add(control);
+            }
+            else
+            {
+                Verbose.WriteErrorMajor($"WINDOW: Tried to create control with name '{control.Name}' in window: '{Name}', but a control with that name already exists!");
+                control.Unload();
+            }
         }
 
         /// <summary>
@@ -274,6 +308,7 @@ namespace Barebones.Windows
         public void DeregisterControl(IControl control)
         {
             _controls.Remove(control);
+            _controlDict.Remove(control.Name);
         }
         
         
@@ -340,6 +375,16 @@ namespace Barebones.Windows
         }
 
         /// <summary>
+        /// Draw a <see cref="IDrawnObject"/> at the specified position, relative to this window.
+        /// </summary>
+        /// <param name="obj">The object to draw.</param>
+        /// <param name="position">The position to draw it at, local to this window.</param>
+        public void DrawLocal(IDrawnObject obj, Vector2 position)
+        {
+            obj.Draw(position + _bounds.Location.ToVector2());
+        }
+
+        /// <summary>
         /// Draw this window and all its controls.
         /// </summary>
         public void Draw()
@@ -349,15 +394,15 @@ namespace Barebones.Windows
                 _background.Draw(Bounds.Center.ToVector2());
                 if (!_hasHandle)
                 {
-                    _topEdge.Draw(new Vector2(Bounds.Center.X, Bounds.Top - (_topEdge.CurrentFrame.Height / 2)));
-                    _topLeftCorner.Draw(new Vector2(Bounds.Left - (_topLeftCorner.CurrentFrame.Width / 2), Bounds.Top - (_topLeftCorner.CurrentFrame.Height / 2)));
-                    _topRightCorner.Draw(new Vector2(Bounds.Right + (_topRightCorner.CurrentFrame.Width / 2), Bounds.Top - (_topRightCorner.CurrentFrame.Height / 2)));
+                    _topEdge.Draw(new Vector2(Bounds.Center.X, Bounds.Top - _topEdge.CurrentFrame.Origin.Y));
+                    _topLeftCorner.Draw(new Vector2(Bounds.Left - _topLeftCorner.CurrentFrame.Origin.X, Bounds.Top - _topLeftCorner.CurrentFrame.Origin.Y));
+                    _topRightCorner.Draw(new Vector2(Bounds.Right + _topRightCorner.CurrentFrame.Origin.X, Bounds.Top - _topRightCorner.CurrentFrame.Origin.Y));
                 }
-                _rightEdge.Draw(new Vector2(Bounds.Right + (_rightEdge.CurrentFrame.Width / 2), _bounds.Center.Y));
-                _bottomEdge.Draw(new Vector2(Bounds.Center.X, Bounds.Bottom + (_bottomEdge.CurrentFrame.Height / 2)));
-                _leftEdge.Draw(new Vector2(Bounds.Left - (_leftEdge.CurrentFrame.Width / 2), _bounds.Center.Y));
-                _bottomLeftCorner.Draw(new Vector2(Bounds.Left - (_bottomLeftCorner.CurrentFrame.Width / 2), Bounds.Bottom + (_bottomLeftCorner.CurrentFrame.Height / 2)));
-                _bottomRightCorner.Draw(new Vector2(Bounds.Right + (_bottomRightCorner.CurrentFrame.Width / 2), Bounds.Bottom + (_bottomRightCorner.CurrentFrame.Height / 2)));
+                _rightEdge.Draw(new Vector2(Bounds.Right + _rightEdge.CurrentFrame.Origin.X, _bounds.Center.Y));
+                _bottomEdge.Draw(new Vector2(Bounds.Center.X, Bounds.Bottom + _bottomEdge.CurrentFrame.Origin.Y));
+                _leftEdge.Draw(new Vector2(Bounds.Left - _leftEdge.CurrentFrame.Origin.X, _bounds.Center.Y));
+                _bottomLeftCorner.Draw(new Vector2(Bounds.Left - _bottomLeftCorner.CurrentFrame.Origin.X, Bounds.Bottom + _bottomLeftCorner.CurrentFrame.Origin.Y));
+                _bottomRightCorner.Draw(new Vector2(Bounds.Right + _bottomRightCorner.CurrentFrame.Origin.X, Bounds.Bottom + _bottomRightCorner.CurrentFrame.Origin.Y));
 
                 for (int i = 0; i < _controls.Count; i++)
                 {
@@ -366,18 +411,18 @@ namespace Barebones.Windows
             }
             if (_hasHandle)
             {
-                _handleBackground.Draw(new Vector2(Bounds.Center.X, _handle.Center.Y + Bounds.Top));
-                _handleTopEdge.Draw(new Vector2(Bounds.Center.X, Bounds.Top - (_handleTopEdge.CurrentFrame.Height / 2)));
-                _handleRightEdge.Draw(new Vector2(Bounds.Right + (_handleRightEdge.CurrentFrame.Width / 2), _handle.Center.Y + Bounds.Top));
-                _handleBottomEdge.Draw(new Vector2(Bounds.Center.X, _handle.Bottom + Bounds.Top + (_handleBottomEdge.CurrentFrame.Height / 2)));
-                _handleLeftEdge.Draw(new Vector2(Bounds.Left - (_handleLeftEdge.CurrentFrame.Width / 2), _handle.Center.Y + Bounds.Top));
-                _handleTopLeftCorner.Draw(new Vector2(Bounds.Left - (_handleTopLeftCorner.CurrentFrame.Width / 2), Bounds.Top - (_handleTopLeftCorner.CurrentFrame.Height / 2)));
-                _handleTopRightCorner.Draw(new Vector2(Bounds.Right + (_handleTopRightCorner.CurrentFrame.Width / 2), Bounds.Top - (_handleTopRightCorner.CurrentFrame.Height / 2)));
-                _handleBottomLeftCorner.Draw(new Vector2(Bounds.Left - (_handleBottomLeftCorner.CurrentFrame.Width / 2), _handle.Bottom + Bounds.Top + (_handleBottomLeftCorner.CurrentFrame.Height / 2)));
-                _handleBottomRightCorner.Draw(new Vector2(Bounds.Right + (_handleBottomRightCorner.CurrentFrame.Width / 2), _handle.Bottom + Bounds.Top + (_handleBottomRightCorner.CurrentFrame.Height / 2)));
+                DrawLocal(_handleBackground, new Vector2(_handle.Center.X, _handle.Center.Y));
+                DrawLocal(_handleTopEdge, new Vector2(_handle.Center.X, _handle.Top - _handleTopEdge.CurrentFrame.Origin.Y));
+                DrawLocal(_handleRightEdge, new Vector2(_handle.Right + _handleRightEdge.CurrentFrame.Origin.X, _handle.Center.Y));
+                DrawLocal(_handleBottomEdge, new Vector2(_handle.Center.X, _handle.Bottom + _handleBottomEdge.CurrentFrame.Origin.Y));
+                DrawLocal(_handleLeftEdge, new Vector2(_handle.Left - _handleLeftEdge.CurrentFrame.Origin.X, _handle.Center.Y));
+                DrawLocal(_handleTopLeftCorner, new Vector2(_handle.Left - _handleTopLeftCorner.CurrentFrame.Origin.X, _handle.Top - _handleTopLeftCorner.CurrentFrame.Origin.Y));
+                DrawLocal(_handleTopRightCorner, new Vector2(_handle.Right + _handleTopRightCorner.CurrentFrame.Origin.X, _handle.Top - _handleTopRightCorner.CurrentFrame.Origin.Y));
+                DrawLocal(_handleBottomLeftCorner, new Vector2(_handle.Left - _handleBottomLeftCorner.CurrentFrame.Origin.X, _handle.Bottom + _handleBottomLeftCorner.CurrentFrame.Origin.Y));
+                DrawLocal(_handleBottomRightCorner, new Vector2(_handle.Right + _handleBottomRightCorner.CurrentFrame.Origin.X, _handle.Bottom + _handleBottomRightCorner.CurrentFrame.Origin.Y));
                 _minimizeButton?.Draw();
                 _closeButton?.Draw();
-                _title.Draw(new Vector2(_bounds.Left + 12, _bounds.Top + (_handle.Height / 2)));
+                DrawLocal(_title, new Vector2(12, _handle.Center.Y));
             }
         }
         

@@ -12,6 +12,7 @@ namespace Barebones.Interfaces
     /// </summary>
     public interface IDrawnObject
     {
+
         /// <summary>
         /// Draw this object at the specified position.
         /// </summary>
