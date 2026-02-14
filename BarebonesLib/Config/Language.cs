@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Barebones.Drawable;
+using Newtonsoft.Json;
 using System.Collections.Concurrent;
 namespace Barebones.Config
 {
@@ -9,7 +10,7 @@ namespace Barebones.Config
     public static class Language
     {
         private static readonly ConcurrentDictionary<string, string> _localization = new ConcurrentDictionary<string, string>();
-        private static string _currentLang = "en";
+        private static string _currentLang;
 
         /// <summary>
         /// The current language of the game.
@@ -30,11 +31,38 @@ namespace Barebones.Config
 
         /// <summary>
         /// Loads a localization set from a file.
-        /// Appends to the existing localization dictionary if the language of the file is the same as the current.
-        /// Writes an error if it is not the same language.
+        /// Clears existing localization and loads the new file.
         /// </summary>
         /// <param name="languagePath"></param>
         public static void LoadLanguageFile(string languagePath)
+        {
+            try
+            {
+                using (StreamReader sr = File.OpenText(languagePath))
+                {
+                    string json = sr.ReadToEnd();
+                    sr.Close();
+                    Dictionary<string, string> _tempLocal = JsonConvert.DeserializeObject<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
+                    _localization.Clear();
+                    foreach (KeyValuePair<string, string> pair in _tempLocal)
+                    {
+                        _localization.TryAdd(pair.Key, pair.Value);
+                    }
+                }
+                Text.ChangeLanguage();
+            }
+            catch(Exception ex)
+            {
+                Verbose.WriteErrorMajor($"Failed to load localization file: {languagePath}\n Ex: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Loads a localization set from a file.
+        /// Appends to the existing localization dictionary if the language of the file is the same as the current.
+        /// </summary>
+        /// <param name="languagePath"></param>
+        public static void AppendLanguageFile(string languagePath)
         {
             try
             {
@@ -49,7 +77,7 @@ namespace Barebones.Config
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Verbose.WriteErrorMajor($"Failed to load localization file: {languagePath}\n Ex: {ex.Message}");
             }

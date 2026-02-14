@@ -1,4 +1,5 @@
-﻿using Barebones.Interfaces;
+﻿using Barebones.Config;
+using Barebones.Interfaces;
 using Microsoft.Xna.Framework;
 
 namespace Barebones.Drawable
@@ -8,6 +9,19 @@ namespace Barebones.Drawable
     /// </summary>
     public class Text : IDrawnObject
     {
+
+        private static readonly List<Text> _textList = new List<Text>();
+
+        internal static void ChangeLanguage()
+        {
+            for (int i = 0; i < _textList.Count; i++)
+            {
+                _textList[i].ChangeText(_textList[i]._originalText);
+                _textList[i]._parent?.RecalculateSize();
+            }
+        }
+
+        private string _originalText;
         private string _storedText;
         private string[] _animArray;
         private ComplexSprite _font;
@@ -18,6 +32,8 @@ namespace Barebones.Drawable
         private string _fontPath;
 
         private Color[] _letterColour;
+
+        private IParent? _parent;
 
         /// <summary>
         /// The ComplexSprite that functions as the font for this text.
@@ -70,9 +86,20 @@ namespace Barebones.Drawable
         /// <summary>
         /// Construct a new text with default scaling.
         /// </summary>
-        /// <param name="text">The string to display.</param>
+        /// <param name="text">The string to display. Will attempt to localize if a language file has been loaded.</param>
         /// <param name="scriptPath">The path to the spritescript to use as a font.</param>
-        public Text(string text, string scriptPath) : this(text, scriptPath, 1f)
+        public Text(string text, string scriptPath) : this(text, scriptPath, 1f, null)
+        {
+
+        }
+
+        /// <summary>
+        /// Construct a new text with default scaling, and a parent.
+        /// </summary>
+        /// <param name="text">The string to display. Will attempt to localize if a language file has been loaded.</param>
+        /// <param name="scriptPath">The path to the spritescript to use as a font.</param>
+        /// <param name="parent">The parent object.</param>
+        public Text(string text, string scriptPath, IParent parent) : this(text, scriptPath, 1f, parent)
         {
 
         }
@@ -80,16 +107,30 @@ namespace Barebones.Drawable
         /// <summary>
         /// Construct a new text with scaling.
         /// </summary>
-        /// <param name="text">The string to display.</param>
+        /// <param name="text">The string to display. Will attempt to localize if a language file has been loaded.</param>
         /// <param name="scriptPath">The path to the spritescript to use as a font.</param>
         /// <param name="scale">The scale of the text.</param>
-        public Text(string text, string scriptPath, float scale)
+        public Text(string text, string scriptPath, float scale) : this(text, scriptPath, scale, null)
         {
+
+        }
+
+        /// <summary>
+        /// Construct a new text with caling, and a parent.
+        /// </summary>
+        /// <param name="text">The string to display. Will attempt to localize if a language file has been loaded.</param>
+        /// <param name="scriptPath">The path to the spritescript to use as a font.</param>
+        /// <param name="scale">The scale of the text.</param>
+        /// <param name="parent">The parent object.</param>
+        public Text(string text, string scriptPath, float scale, IParent? parent)
+        {
+            _parent = parent;
             _font = new ComplexSprite(scriptPath);
             _fontPath = scriptPath;
             _scale = scale;
             _font.SetScale(scale, scale);
             ChangeText(text);
+            _textList.Add(this);
         }
                 
         /// <summary>
@@ -135,9 +176,14 @@ namespace Barebones.Drawable
         /// <param name="text">The string to display.</param>
         public void ChangeText(string text)
         {
-            if (text != _storedText)
+            if (text != _originalText)
             {
+                _originalText = text;
                 _storedText = text;
+                if (!string.IsNullOrEmpty(Language.CurrentLanguage))
+                {
+                    _storedText = Language.Translate(_originalText);
+                }
                 _animArray = new string[text.Length];
                 for (int i = 0; i < text.Length; i++)
                 {
@@ -188,6 +234,7 @@ namespace Barebones.Drawable
         /// </summary>
         public void Unload()
         {
+            _textList.Remove(this);
             _font.UnloadSprite();
         }
 
