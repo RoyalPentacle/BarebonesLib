@@ -8,6 +8,6 @@ namespace Barebones.Windows.Controls
 {
     internal class Slidebar
     {
-        // test
+        // test 2
     }
 }
