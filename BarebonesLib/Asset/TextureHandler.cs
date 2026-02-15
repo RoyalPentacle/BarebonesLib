@@ -195,7 +195,7 @@ namespace Barebones.Asset
             try // Try to get the texture from the dictionary
             {
                 _mutex.WaitOne();
-                if (_textureDict.TryGetValue(texturePath, out TextureMap tex))
+                if (_textureDict.TryGetValue(texturePath, out TextureMap? tex))
                 {
                     tex.Count++;
                     return tex.Texture;
@@ -287,7 +287,7 @@ namespace Barebones.Asset
         /// <param name="texturePath">The name of the texture to get.</param>
         private static bool GetTextureFromCache(string texturePath)
         {
-            if (_textureCache.TryGetValue(texturePath, out TextureMap tex))
+            if (_textureCache.TryGetValue(texturePath, out TextureMap? tex))
             {
                 _textureCache.Remove(texturePath);
                 _sortedCache.Remove(texturePath);
