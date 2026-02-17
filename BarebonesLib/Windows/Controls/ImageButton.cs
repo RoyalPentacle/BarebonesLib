@@ -42,6 +42,7 @@ namespace Barebones.Windows.Controls
         /// <param name="action">The action performed when the button is activated.</param>
         public ImageButton(string name, string scriptPath, string anim, Rectangle bounds, Window parent, Action<Button> action)
         {
+            _name = name;
             _bounds = bounds;
             _parent = parent;
             _action = action;
