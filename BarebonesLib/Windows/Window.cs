@@ -289,9 +289,8 @@ namespace Barebones.Windows
         /// <param name="control"></param>
         public void RegisterControl(IControl control)
         {
-            if (!_controlDict.ContainsKey(control.Name))
+            if (_controlDict.TryAdd(control.Name, control))
             {
-                _controlDict.Add(control.Name, control);
                 _controls.Add(control);
             }
             else
@@ -310,7 +309,28 @@ namespace Barebones.Windows
             _controls.Remove(control);
             _controlDict.Remove(control.Name);
         }
-        
+
+        /// <summary>
+        /// Get a control stored in this window by its name.
+        /// </summary>
+        /// <typeparam name="T">The type of control to find.</typeparam>
+        /// <param name="name">The name of the control to find.</param>
+        /// <param name="control">The output control.</param>
+        /// <returns>True if the control exists, false otherwise.</returns>
+        public bool GetControl<T>(string name, out T? control) where T : class, IControl
+        {
+            if (_controlDict.TryGetValue(name, out IControl? temp))
+            {
+                if (temp != null && temp is T)
+                {
+                    control = temp as T;
+                    return true;
+                }
+            }
+            control = null;
+            return false;
+        }
+
         
         /// <summary>
         /// Minimize the window.

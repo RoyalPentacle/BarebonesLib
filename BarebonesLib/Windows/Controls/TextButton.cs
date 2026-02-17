@@ -94,7 +94,7 @@ namespace Barebones.Windows.Controls
                     if (anim != null)
                     {
                         bounds.Width += anim.Frames[0].Width;
-                        halfFirstChar = 2; //anim.Frames[0].Width / 9f;
+                        halfFirstChar = 2; //anim.Frames[0].Width / 2f;
                     }
                 }
             }
@@ -133,7 +133,7 @@ namespace Barebones.Windows.Controls
             {
                 _displayText = new Text(text, scriptPath, textScale);
                 _displayText.SetColour(textColor);
-            _displayText.Font.IgnoreCulling = true;
+                _displayText.Font.IgnoreCulling = true;
                 float halfFirstChar = 0f;
                 if (!string.IsNullOrEmpty(text))
                 {

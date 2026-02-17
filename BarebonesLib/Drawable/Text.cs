@@ -17,7 +17,6 @@ namespace Barebones.Drawable
             for (int i = 0; i < _textList.Count; i++)
             {
                 _textList[i].ChangeText(_textList[i]._originalText);
-                _textList[i]._parent?.RecalculateSize();
             }
         }
 
@@ -41,6 +40,14 @@ namespace Barebones.Drawable
         public ComplexSprite Font
         {
             get { return _font; }
+        }
+
+        /// <summary>
+        /// The pre-localization string for this text.
+        /// </summary>
+        public string OriginalText
+        {
+            get { return _originalText; }
         }
 
         /// <summary>
@@ -178,6 +185,7 @@ namespace Barebones.Drawable
         {
             if (text != _originalText)
             {
+                string temp = _originalText;
                 _originalText = text;
                 _storedText = text;
                 if (!string.IsNullOrEmpty(Language.CurrentLanguage))
@@ -211,6 +219,9 @@ namespace Barebones.Drawable
                     _letterColour[i] = Color.White;
 
                 }
+                //if the original text, before this change, was not empty or null, then recalculate the size of the parent, if it exists.
+                if (!string.IsNullOrEmpty(temp)) 
+                    _parent?.RecalculateSize();
             }
         }
 
