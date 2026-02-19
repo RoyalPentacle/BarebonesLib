@@ -55,7 +55,7 @@ namespace Barebones.Windows.Controls
         /// Change the animation of this button.
         /// </summary>
         /// <param name="anim">The animation to change to.</param>
-        public override void ChangeAnim(string anim)
+        public virtual void ChangeAnim(string anim)
         {
             _sprite.ChangeAnimation(anim);
         }

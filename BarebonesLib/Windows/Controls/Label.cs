@@ -245,16 +245,6 @@ namespace Barebones.Windows.Controls
         }
 
         /// <summary>
-        /// Changes the animation of the button.
-        /// </summary>
-        /// <remarks>Currently unused, here for compatability.</remarks>
-        /// <param name="anim">The animation to change to.</param>
-        public void ChangeAnim(string anim)
-        {
-            
-        }
-
-        /// <summary>
         /// Check for inputs for this label.
         /// </summary>
         /// <remarks>Currently unused, here for compatability.</remarks>

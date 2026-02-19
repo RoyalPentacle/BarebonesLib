@@ -31,12 +31,6 @@ namespace Barebones.Interfaces
         }
 
         /// <summary>
-        /// Change the animation of the control.
-        /// </summary>
-        /// <param name="anim">The animation to change to.</param>
-        public abstract void ChangeAnim(string anim);
-
-        /// <summary>
         /// Update the control.
         /// </summary>
         public abstract void Update();

@@ -61,11 +61,6 @@ namespace Barebones.Windows.Controls
             get { return _name; }
         }
 
-        /// <summary>
-        /// Change the animation of this button.
-        /// </summary>
-        /// <param name="anim">The animation to change to.</param>
-        public abstract void ChangeAnim(string anim);
 
 
         /// <summary>

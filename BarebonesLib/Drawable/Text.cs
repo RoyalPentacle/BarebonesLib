@@ -7,6 +7,7 @@ namespace Barebones.Drawable
     /// <summary>
     /// A class that draws text to the screen.
     /// </summary>
+    /// <remarks>Will attempt to localize a string if it begins with %% and ends with %%</remarks>
     public class Text : IDrawnObject
     {
 
@@ -190,7 +191,8 @@ namespace Barebones.Drawable
                 _storedText = text;
                 if (!string.IsNullOrEmpty(Language.CurrentLanguage))
                 {
-                    _storedText = Language.Translate(_originalText);
+                    if (_originalText.StartsWith("%%") && _originalText.EndsWith("%%"))
+                        _storedText = Language.Translate(_originalText);
                 }
                 _animArray = new string[text.Length];
                 for (int i = 0; i < text.Length; i++)
@@ -204,7 +206,7 @@ namespace Barebones.Drawable
                 {
                     if (_font.Animations.TryGetValue(_animArray[i], out ComplexSprite.Anim? anim))
                     {
-                        _textWidth = (int)(_textWidth + ((anim.Frames[0].Width + 2) * _scale));
+                        _textWidth = (int)(_textWidth + ((anim.Frames[0].Width) * _scale));
                         if (_textHeight < anim.Frames[0].Height * _scale)
                         {
                             _textHeight = (int)(anim.Frames[0].Height * _scale);
@@ -265,7 +267,7 @@ namespace Barebones.Drawable
                 _font.ChangeAnimation(_animArray[i]);
                 position.X += (_font.CurrentFrame.Width - _font.CurrentFrame.Origin.X) * _scale;
                 _font.Draw(position);
-                position.X += (_font.CurrentFrame.Width - _font.CurrentFrame.Origin.X + 2) * _scale;
+                position.X += (_font.CurrentFrame.Width - _font.CurrentFrame.Origin.X) * _scale;
             }
         }
     }

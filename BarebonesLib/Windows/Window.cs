@@ -341,12 +341,12 @@ namespace Barebones.Windows
             _isMinimized = !_isMinimized;
             if (!_isMinimized)
             {
-                button.ChangeAnim("MINIMIZE");
+                ((ImageButton)button).ChangeAnim("MINIMIZE");
                 _bounds.Size = _maximizedSize;
             }
             else
             {
-                button.ChangeAnim("MAXIMIZE");
+                ((ImageButton)button).ChangeAnim("MAXIMIZE");
                 _bounds.Size = _handle.Size;
             }
 
