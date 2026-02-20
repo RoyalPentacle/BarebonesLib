@@ -32,6 +32,24 @@ namespace Barebones.Windows.Controls
         private bool _hasBackground = false;
 
         /// <summary>
+        /// The text shown by this button.
+        /// </summary>
+        public string Text
+        {
+            get { return _displayText.StoredText; }
+        }
+
+
+        /// <summary>
+        /// Change the name of this TextButton.
+        /// </summary>
+        /// <param name="name">The name to change to.</param>
+        public void ChangeName(string name)
+        {
+            _name = name;
+        }
+
+        /// <summary>
         /// Construct a new TextButton with the specified arguments. Creates a button of a specific size.
         /// </summary>
         /// <param name="name">The name of the button.</param>
@@ -180,6 +198,25 @@ namespace Barebones.Windows.Controls
                 _bottomRightCorner.IgnoreCulling = true;
                 _bottomRightCorner.ChangeAnimation("TEXTBUTTONBOTTOMRIGHT");
             }
+        }
+
+        /// <summary>
+        /// Change the text displayed by the button.
+        /// </summary>
+        /// <param name="text"></param>
+        public void ChangeText(string text)
+        {
+            _displayText.ChangeText(text); 
+            float halfFirstChar = 0f;
+            if (!string.IsNullOrEmpty(text))
+            {
+                if (_displayText.Font.GetAnimation(_displayText.StoredText[0].ToString(), out ComplexSprite.Anim? anim))
+                {
+                    if (anim != null)
+                        halfFirstChar = anim.Frames[0].Width / 2f;
+                }
+            }
+            _textOffset = new Vector2(-(_displayText.TextWidth / 2 - halfFirstChar), 0);
         }
 
         /// <summary>

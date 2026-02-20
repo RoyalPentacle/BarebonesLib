@@ -62,6 +62,14 @@ namespace Barebones.Windows.Controls
         }
 
 
+        /// <summary>
+        /// The bounds of this Button
+        /// </summary>
+        public Rectangle Bounds
+        {
+            get { return _bounds; }
+            set { _bounds = value; }
+        }
 
         /// <summary>
         /// Check for inputs for this button.

@@ -22,6 +22,8 @@ namespace Barebones.Windows.Controls
         private Rectangle _bounds;
 
         private Text _displayText;
+        private bool _activateOnFocusLoss = false;
+        private bool _loseFocusOnEnter = true;
 
         private ComplexSprite _background;
         private ComplexSprite _topEdge;
@@ -66,8 +68,27 @@ namespace Barebones.Windows.Controls
         public string Text
         {
             get { return _displayText.StoredText; }
-            set { _displayText?.ChangeText(value); }
+            set { _displayText.ChangeText(value); }
         }
+
+        /// <summary>
+        /// Should this Textbox perform its action when it loses focus?
+        /// </summary>
+        public bool ActivateOnFocusLoss
+        {
+            get { return _activateOnFocusLoss; }
+            set { _activateOnFocusLoss = value; }
+        }
+
+        /// <summary>
+        /// Should this Textbox lose focus when enter is pressed?
+        /// </summary>
+        public bool LoseFocusOnEnter
+        {
+            get { return _loseFocusOnEnter; }
+            set { _loseFocusOnEnter = value; }
+        }
+
 
         /// <summary>
         /// Construct a new textbox with the specified arguments.
@@ -147,6 +168,15 @@ namespace Barebones.Windows.Controls
                 Control.SetInputDelegate(ProcessTextInput);
             }
         }
+       
+
+        /// <summary>
+        /// Forcefully activate this textbox.
+        /// </summary>
+        public void Activate()
+        {
+            _action.Invoke(this);
+        }
 
         private void ProcessTextInput(char c)
         {
@@ -175,7 +205,7 @@ namespace Barebones.Windows.Controls
             else if (c == '\r')
             {
                 _action.Invoke(this);
-            }
+            } 
             else
             {
                 if (_displayText.StoredText.Length < _maxLength)
@@ -245,7 +275,16 @@ namespace Barebones.Windows.Controls
         {
             if (_active)
             {
-                if (Control.KeyPressed(Microsoft.Xna.Framework.Input.Keys.Enter) || (Control.LeftClickPressed() && !_bounds.Contains(_parent.LocalMousePosition)))
+                if (Control.LeftClickPressed() && !_bounds.Contains(_parent.LocalMousePosition))
+                {
+                    _active = false;
+                    Control.ClearInputDelegate();
+                    if (_activateOnFocusLoss)
+                    {
+                        _action.Invoke(this);
+                    }
+                }
+                else if (Control.KeyPressed(Microsoft.Xna.Framework.Input.Keys.Enter) && _loseFocusOnEnter)
                 {
                     _active = false;
                     Control.ClearInputDelegate();
