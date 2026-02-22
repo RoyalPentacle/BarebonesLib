@@ -30,6 +30,7 @@ namespace Barebones.Windows.Controls
         private Text _displayText;
         private Vector2 _textOffset;
         private bool _hasBackground = false;
+        private bool _centered = true;
 
         /// <summary>
         /// The text shown by this button.
@@ -55,14 +56,16 @@ namespace Barebones.Windows.Controls
         /// <param name="name">The name of the button.</param>
         /// <param name="bounds">The size of the button.</param>
         /// <param name="hasBackground">Does this button have a background.</param>
+        /// <param name="centered">Is the text centered in the button? If not, it's left aligned.</param>
         /// <param name="text">The text displayed by this button.</param>
         /// <param name="scriptPath">The script path to the font for the text in this button.</param>
         /// <param name="textScale">The scale of the text.</param>
         /// <param name="textColor">The colour of the text.</param>
         /// <param name="parent">The parent window.</param>
         /// <param name="action">The action when this button is activated.</param>
-        public TextButton(string name, Rectangle bounds, bool hasBackground, string text, string scriptPath, float textScale, Color textColor, Window parent, Action<Button> action)
+        public TextButton(string name, Rectangle bounds, bool hasBackground, bool centered, string text, string scriptPath, float textScale, Color textColor, Window parent, Action<Button> action)
         {
+            _centered = centered;
             Initialize(name, bounds, hasBackground, text, scriptPath, textScale, textColor, parent, action);
         }
 
@@ -78,7 +81,7 @@ namespace Barebones.Windows.Controls
         /// <param name="textColor">The colour of the text.</param>
         /// <param name="parent">The parent window.</param>
         /// <param name="action">The action when this button is activated.</param>
-        public TextButton(string name, Rectangle bounds, string text, string scriptPath, float textScale, Color textColor, Window parent, Action<Button> action) : this(name, bounds, true, text, scriptPath, textScale, textColor, parent, action)
+        public TextButton(string name, Rectangle bounds, string text, string scriptPath, float textScale, Color textColor, Window parent, Action<Button> action) : this(name, bounds, true, true, text, scriptPath, textScale, textColor, parent, action)
         {
               
         }
@@ -89,17 +92,19 @@ namespace Barebones.Windows.Controls
         /// <param name="name">The name of the button.</param>
         /// <param name="pos">The location of the button.</param>
         /// <param name="hasBackground">Does this button have a background.</param>
+        /// <param name="centered">Is the text centered in the button? If not, it's left aligned.</param>
         /// <param name="text">The text displayed by this button.</param>
         /// <param name="scriptPath">The script path to the font for the text in this button.</param>
         /// <param name="textScale">The scale of the text.</param>
         /// <param name="textColor">The colour of the text.</param>
         /// <param name="parent">The parent window.</param>
         /// <param name="action">The action when this button is activated.</param>
-        public TextButton(string name, Point pos, bool hasBackground, string text, string scriptPath, float textScale, Color textColor, Window parent, Action<Button> action)
+        public TextButton(string name, Point pos, bool hasBackground, bool centered, string text, string scriptPath, float textScale, Color textColor, Window parent, Action<Button> action)
         {
             _displayText = new Text(text, scriptPath, textScale);
             _displayText.SetColour(textColor);
             _displayText.Font.IgnoreCulling = true;
+            _centered = centered;
             Rectangle bounds = new Rectangle(pos.X, pos.Y, _displayText.TextWidth, _displayText.TextHeight);
             bounds.Height = (int)(bounds.Height * 1.5f);
             if (bounds.Height % 2 == 1)
@@ -135,7 +140,7 @@ namespace Barebones.Windows.Controls
         /// <param name="textColor">The colour of the text.</param>
         /// <param name="parent">The parent window.</param>
         /// <param name="action">The action when this button is activated.</param>
-        public TextButton(string name, Point pos, string text, string scriptPath, float textScale, Color textColor, Window parent, Action<Button> action) : this(name, pos, true, text, scriptPath, textScale, textColor, parent, action)
+        public TextButton(string name, Point pos, string text, string scriptPath, float textScale, Color textColor, Window parent, Action<Button> action) : this(name, pos, true, true, text, scriptPath, textScale, textColor, parent, action)
         {
 
         }
@@ -273,7 +278,11 @@ namespace Barebones.Windows.Controls
                 _parent.DrawLocal(_bottomLeftCorner, new Vector2(_bounds.Left - _bottomLeftCorner.CurrentFrame.Origin.X, _bounds.Bottom + _bottomLeftCorner.CurrentFrame.Origin.Y));
                 _parent.DrawLocal(_bottomRightCorner, new Vector2(_bounds.Right + _bottomRightCorner.CurrentFrame.Origin.X, _bounds.Bottom + _bottomRightCorner.CurrentFrame.Origin.Y));
             }
-            _parent.DrawLocal(_displayText, _bounds.Center.ToVector2() + _textOffset);
+            if (_centered)
+                _parent.DrawLocal(_displayText, _bounds.Center.ToVector2() + _textOffset);
+            else
+                _parent.DrawLocal(_displayText, new Vector2(_bounds.Left + 4, _bounds.Center.Y));
+            
             base.Draw();
         }
 

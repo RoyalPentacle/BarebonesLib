@@ -1,4 +1,5 @@
 ﻿using Barebones.Config;
+using Barebones.Windows.Controls;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -15,11 +16,17 @@ namespace Barebones.Windows
     {
         internal static readonly List<Window> _windows = new List<Window>();
         internal static Dictionary<string, Window> _windowDict = new Dictionary<string, Window>();
+        internal static readonly List<Dropdown> _dropdowns = new List<Dropdown>();
         private static bool _windowClicked = false;
+        private static bool _dropdownMouseOver;
 
         internal static bool WindowClicked
         {
             get { return _windowClicked; }
+        }
+        internal static bool DropdownMouseover
+        {
+            get { return _dropdownMouseOver; }
         }
 
         /// <summary>
@@ -69,9 +76,26 @@ namespace Barebones.Windows
                     }
                 }
             }
+            _dropdownMouseOver = false;
+            for (int i = 0; i < _dropdowns.Count; i++)
+            {
+                if (_dropdowns[i].Active && _dropdowns[i].Bounds.Contains(_dropdowns[i].Parent.LocalMousePosition))
+                {
+                    _dropdownMouseOver = true;
+                    break;
+                }
+            }
+
             if (_windows.Count > 0)
             {
-                _windows[0].CheckInput();
+                for (int i = 0; i < _windows.Count; i++)
+                {
+                    if (_windows[i].Bounds.Contains(Control.MousePosition))
+                    {
+                        _windows[i].CheckInput();
+                        break;
+                    }
+                }
             }
             for (int i = _windows.Count - 1; i >= 0; i--)
             {

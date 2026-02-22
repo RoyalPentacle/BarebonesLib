@@ -283,5 +283,23 @@ namespace Barebones.Config
             return Engine.OldMouseState.RightButton == ButtonState.Pressed && Engine.NewMouseState.RightButton == ButtonState.Released;
         }
 
+        /// <summary>
+        /// Checks if the mouse has scrolled down.
+        /// </summary>
+        /// <returns>True if the mouse has scrolled down, false otherwise.</returns>
+        public static bool ScrollDown()
+        {
+            return Engine.OldMouseState.ScrollWheelValue > Engine.NewMouseState.ScrollWheelValue;
+        }
+
+        /// <summary>
+        /// Checks if the mouse has scrolled up.
+        /// </summary>
+        /// <returns>True if the mouse has scrolled up, false otherwise.</returns>
+        public static bool ScrollUp()
+        {
+            return Engine.OldMouseState.ScrollWheelValue < Engine.NewMouseState.ScrollWheelValue;
+        }
+
     }
 }

@@ -276,7 +276,8 @@ namespace Barebones.Windows
             {
                 for (int i = _controls.Count - 1; i >= 0; i--)
                 {
-                    _controls[i].CheckInput();
+                    if (!WindowHandler.DropdownMouseover || _controls[i] is Dropdown)
+                        _controls[i].CheckInput();
                 }
             }
 

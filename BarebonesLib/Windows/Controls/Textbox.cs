@@ -154,7 +154,10 @@ namespace Barebones.Windows.Controls
             _bottomRightCorner = new ComplexSprite(_parent.ScriptPath);
             _bottomRightCorner.IgnoreCulling = true;
             _bottomRightCorner.ChangeAnimation("TEXTBOXBOTTOMRIGHT");
-            _maxLength = maxLength;
+            if (maxLength >= 0)
+                _maxLength = maxLength;
+            else
+                _maxLength = int.MaxValue;
         }
 
         /// <summary>
@@ -202,10 +205,10 @@ namespace Barebones.Windows.Controls
                     }
                 }
             }
-            else if (c == '\r')
-            {
-                _action.Invoke(this);
-            } 
+            //else if (c == '\r')
+            //{
+            //    _action.Invoke(this);
+            //} 
             else
             {
                 if (_displayText.StoredText.Length < _maxLength)
