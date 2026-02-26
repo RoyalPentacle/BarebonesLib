@@ -101,8 +101,7 @@ namespace Barebones.States
                 case State.Sound:
                     SoundEditor.Update();
                     break;
-                case State.Bundle:
-                    BundleEditor.Update();
+                case State.Bundle: // The bundle editor doesn't actually have any update logic, it's done entirely through the window system.
                     break;
                 case State.Particle:
                     ParticleEditor.Update();

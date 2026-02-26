@@ -241,11 +241,6 @@ namespace Barebones.States
             }
         }
 
-        internal static void Update()
-        {
-
-        }
-
         internal static void Unload()
         {
             _bundleDisplay?.Unload();
