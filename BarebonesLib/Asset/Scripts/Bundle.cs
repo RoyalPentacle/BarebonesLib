@@ -23,7 +23,7 @@ namespace Barebones.Asset.Scripts
         /// </summary>
         public Bundle()
         {
-            _pairs = null;
+            _pairs = new Dictionary<string, string>();
         }
     }
 }

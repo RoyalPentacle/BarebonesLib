@@ -50,6 +50,14 @@ namespace Barebones.Windows.Controls
         }
 
         /// <summary>
+        /// The bounds of the label.
+        /// </summary>
+        public Rectangle Bounds
+        {
+            get { return _bounds; }
+        }
+
+        /// <summary>
         /// The pre-localized string for the text in this label.
         /// </summary>
         public string LabelText
@@ -94,21 +102,9 @@ namespace Barebones.Windows.Controls
             bounds.Height = (int)(bounds.Height * 1.5f);
             if (bounds.Height % 2 == 1)
                 bounds.Height += 1;
-            float halfFirstChar = 0f;
-            if (!string.IsNullOrEmpty(text))
-            {
-                if (_labelText.Font.GetAnimation(_labelText.StoredText[0].ToString(), out ComplexSprite.Anim? anim))
-                {
-                    if (anim != null)
-                    {
-                        bounds.Width += anim.Frames[0].Width;
-                        halfFirstChar = 2; // anim.Frames[0].Width / 2f;
-                    }
-                }
-            }
             if (bounds.Width % 2 == 1)
                 bounds.Width += 1;
-            _textOffset = new Vector2(-(_labelText.TextWidth / 2f - halfFirstChar), 0);
+            _textOffset = new Vector2(-(_labelText.TextWidth / 2f), 0);
             _autoSized = true;
             Initialize(name, bounds, hasBackground, text, fontScriptPath, fontScale, textColor, parent);
         }
@@ -157,18 +153,7 @@ namespace Barebones.Windows.Controls
                 _labelText = new Text(text, fontScriptPath, fontScale, this);
                 _labelText.SetColour(textColor);
                 _labelText.Font.IgnoreCulling = true;
-                float halfFirstChar = 0f;
-                if (!string.IsNullOrEmpty(text))
-                {
-                    if (_labelText.Font.GetAnimation(_labelText.StoredText[0].ToString(), out ComplexSprite.Anim? anim))
-                    {
-                        if (anim != null)
-                        {
-                            halfFirstChar = 2; // anim.Frames[0].Width / 2f;
-                        }
-                    }
-                }
-                _textOffset = new Vector2(-(_labelText.TextWidth / 2f - halfFirstChar), 0);
+                _textOffset = new Vector2(-(_labelText.TextWidth / 2f), 0);
             }
             if (_hasBackground)
             {
@@ -213,7 +198,6 @@ namespace Barebones.Windows.Controls
         /// <remarks>Also recalculate the text offset.</remarks>
         public void RecalculateSize()
         {
-            float halfFirstChar = 2f;
             if (_autoSized)
             {
                 _bounds.Width = _labelText.TextWidth;
@@ -228,7 +212,6 @@ namespace Barebones.Windows.Controls
                         if (anim != null)
                         {
                             _bounds.Width += anim.Frames[0].Width;
-                            halfFirstChar = 2f; // anim.Frames[0].Width / 2f;
                         }
                     }
                 }
@@ -240,8 +223,18 @@ namespace Barebones.Windows.Controls
                 _bottomEdge?.SetScale(new Vector2(_bounds.Size.X / _bottomEdge.CurrentFrame.Width, 1));
                 _leftEdge?.SetScale(new Vector2(1, _bounds.Size.Y / _leftEdge.CurrentFrame.Height));
             }
-            _textOffset = new Vector2(-(_labelText.TextWidth / 2f - halfFirstChar), 0);
+            _textOffset = new Vector2(-(_labelText.TextWidth / 2f), 0);
 
+        }
+
+        /// <summary>
+        /// Change the size and location of the label.
+        /// </summary>
+        /// <param name="bounds">The new bounds of the label.</param>
+        public void ChangeSize(Rectangle bounds)
+        {
+            _bounds = bounds;
+            RecalculateSize();
         }
 
         /// <summary>

@@ -42,6 +42,20 @@ namespace Barebones.Windows.Controls
 
 
         /// <summary>
+        /// Change the size and location of this TextButton.
+        /// </summary>
+        /// <param name="bounds">The new bounds of this TextButton.</param>
+        public void ChangeSize(Rectangle bounds)
+        {
+            _bounds = bounds;
+            _background.SetScale(new Vector2(_bounds.Size.X / _background.CurrentFrame.Width, _bounds.Size.Y / _background.CurrentFrame.Height));
+            _topEdge.SetScale(new Vector2(_bounds.Size.X / _topEdge.CurrentFrame.Width, 1));
+            _rightEdge.SetScale(new Vector2(1, _bounds.Size.Y / _rightEdge.CurrentFrame.Height));
+            _bottomEdge.SetScale(new Vector2(_bounds.Size.X / _bottomEdge.CurrentFrame.Width, 1));
+            _leftEdge.SetScale(new Vector2(1, _bounds.Size.Y / _leftEdge.CurrentFrame.Height));
+        }
+
+        /// <summary>
         /// Change the name of this TextButton.
         /// </summary>
         /// <param name="name">The name to change to.</param>
@@ -109,21 +123,9 @@ namespace Barebones.Windows.Controls
             bounds.Height = (int)(bounds.Height * 1.5f);
             if (bounds.Height % 2 == 1)
                 bounds.Height += 1;
-            float halfFirstChar = 0f;
-            if (!string.IsNullOrEmpty(text))
-            {
-                if (_displayText.Font.GetAnimation(_displayText.StoredText[0].ToString(), out ComplexSprite.Anim? anim))
-                {
-                    if (anim != null)
-                    {
-                        bounds.Width += anim.Frames[0].Width;
-                        halfFirstChar = 2; //anim.Frames[0].Width / 2f;
-                    }
-                }
-            }
             if (bounds.Width % 2 == 1)
                 bounds.Width += 1;
-            _textOffset = new Vector2(-(_displayText.TextWidth / 2f - halfFirstChar), 0);
+            _textOffset = new Vector2(-(_displayText.TextWidth / 2f), 0);
 
             Initialize(name, bounds, hasBackground, text, scriptPath, textScale, textColor, parent, action);
         }
@@ -157,16 +159,8 @@ namespace Barebones.Windows.Controls
                 _displayText = new Text(text, scriptPath, textScale);
                 _displayText.SetColour(textColor);
                 _displayText.Font.IgnoreCulling = true;
-                float halfFirstChar = 0f;
-                if (!string.IsNullOrEmpty(text))
-                {
-                    if (_displayText.Font.GetAnimation(_displayText.StoredText[0].ToString(), out ComplexSprite.Anim? anim))
-                    {
-                        if (anim != null)
-                            halfFirstChar = anim.Frames[0].Width / 2f;
-                    }
-                }
-                _textOffset = new Vector2(-(_displayText.TextWidth / 2 - halfFirstChar), 0);
+
+                _textOffset = new Vector2(-(_displayText.TextWidth / 2f), 0);
             }
             if (_hasBackground)
             {
@@ -212,16 +206,7 @@ namespace Barebones.Windows.Controls
         public void ChangeText(string text)
         {
             _displayText.ChangeText(text); 
-            float halfFirstChar = 0f;
-            if (!string.IsNullOrEmpty(text))
-            {
-                if (_displayText.Font.GetAnimation(_displayText.StoredText[0].ToString(), out ComplexSprite.Anim? anim))
-                {
-                    if (anim != null)
-                        halfFirstChar = anim.Frames[0].Width / 2f;
-                }
-            }
-            _textOffset = new Vector2(-(_displayText.TextWidth / 2 - halfFirstChar), 0);
+            _textOffset = new Vector2(-(_displayText.TextWidth / 2f), 0);
         }
 
         /// <summary>

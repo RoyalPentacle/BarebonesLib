@@ -1,6 +1,7 @@
 ﻿using Barebones.Config;
 using Barebones.Windows.Controls;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,9 @@ namespace Barebones.Windows
         private static bool _windowClicked = false;
         private static bool _dropdownMouseOver;
 
+        private static Window? _openFileDialog;
+        private static Window? _saveFileDialog;
+
         internal static bool WindowClicked
         {
             get { return _windowClicked; }
@@ -27,6 +31,68 @@ namespace Barebones.Windows
         internal static bool DropdownMouseover
         {
             get { return _dropdownMouseOver; }
+        }
+
+        private static Window? _forceActiveWindow;
+
+        /// <summary>
+        /// Show the OpenFileDialog.
+        /// </summary>
+        /// <param name="action">The action to perform when the dialog is finished.</param>
+        /// <param name="path">The path to show in the textbox by default.</param>
+        public static void ShowOpenFileDialog(Action<Textbox> action, string path)
+        {
+            if (_openFileDialog == null)
+            {
+                _openFileDialog = new Window("openFileDialog", "scripts/sprites/ui/windows/default.sdf", new Rectangle(Engine.Graphics.GraphicsDevice.Viewport.Width / 2 - 250, Engine.Graphics.GraphicsDevice.Viewport.Height / 2 - 25, 500, 68), "Open File", "scripts/sprites/ui/font.sdf");
+                Textbox tb = new Textbox("openTextbox", new Rectangle(4, 40, 492, 24), "scripts/sprites/ui/font.sdf", 1f, Color.White, null, false, -1, _openFileDialog, action);
+                _openFileDialog.RegisterControl(tb);
+                tb.Text = path;
+                _forceActiveWindow = _openFileDialog;
+                _openFileDialog.HasMinimize = false;
+            }
+        }
+
+        /// <summary>
+        /// Hide the OpenFileDialog, must be invoked manually when you're done with it.
+        /// </summary>
+        public static void HideOpenFileDialog()
+        {
+            if (_openFileDialog != null)
+            {
+                _openFileDialog.Unload();
+                _openFileDialog = null;
+            }
+        }
+
+        /// <summary>
+        /// Show the SaveFileDialog.
+        /// </summary>
+        /// <param name="action">The action to perform when the dialog is finished.</param>
+        /// <param name="path">The path to show in the textbox by default.</param>
+        public static void ShowSaveFileDialog(Action<Textbox> action, string path)
+        {
+            if (_saveFileDialog == null)
+            {
+                _saveFileDialog = new Window("saveFileDialog", "scripts/sprites/ui/windows/default.sdf", new Rectangle(Engine.Graphics.GraphicsDevice.Viewport.Width / 2 - 250, Engine.Graphics.GraphicsDevice.Viewport.Height / 2 - 25, 500, 68), "Save File", "scripts/sprites/ui/font.sdf");
+                Textbox tb = new Textbox("saveTextbox", new Rectangle(4, 40, 492, 24), "scripts/sprites/ui/font.sdf", 1f, Color.White, null, false, -1, _saveFileDialog, action);
+                _saveFileDialog.RegisterControl(tb);
+                tb.Text = path;
+                _forceActiveWindow = _saveFileDialog;
+                _saveFileDialog.HasMinimize = false;
+            }
+        }
+
+        /// <summary>
+        /// Hide the SaveFileDialog, must be invoked manually when you're done with it.
+        /// </summary>
+        public static void HideSaveFileDialog()
+        { 
+            if (_saveFileDialog != null)
+            {
+                _saveFileDialog.Unload();
+                _saveFileDialog = null;
+            }    
         }
 
         /// <summary>
@@ -90,12 +156,18 @@ namespace Barebones.Windows
             {
                 for (int i = 0; i < _windows.Count; i++)
                 {
-                    if (_windows[i].Bounds.Contains(Control.MousePosition))
+                    if (_windows[i].Bounds.Contains(Control.MousePosition) || i == 0)
                     {
                         _windows[i].CheckInput();
                         break;
                     }
                 }
+            }
+            if (_forceActiveWindow != null)
+            {
+                _windows.Remove(_forceActiveWindow);
+                _windows.Insert(0, _forceActiveWindow);
+                _forceActiveWindow = null;
             }
             for (int i = _windows.Count - 1; i >= 0; i--)
             {

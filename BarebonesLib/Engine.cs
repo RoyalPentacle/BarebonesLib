@@ -1,6 +1,7 @@
 ﻿using Barebones.Asset;
 using Barebones.Drawable.Particles;
 using Barebones.Network;
+using Barebones.States;
 using Barebones.Windows;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
@@ -407,6 +408,9 @@ namespace Barebones
         {
             get { return Camera2D.Camera; }
         }
+
+        private static bool _isEditor = false;
+
         /// <summary>
         /// Initialize the Barebones engine
         /// </summary>
@@ -426,6 +430,8 @@ namespace Barebones
                     Thread.Sleep(ms)
                 end
                 ");
+            if (_isEditor)
+                StateHandler.ChangeState(State.Select);
         }
 
         /// <summary>
@@ -438,6 +444,22 @@ namespace Barebones
             _newMouseState = Mouse.GetState();
             ParticleHandler.Update();
             WindowHandler.Update();
+        }
+
+        /// <summary>
+        /// Executes engine logic to be executed instead of a games. I.E. The built in script editors.
+        /// </summary>
+        /// <remarks>Place game update logic in a negated if statement for this function.</remarks>
+        /// <returns>True if we are overriding other logic, false otherwise.</returns>
+        public static bool OverrideUpdate()
+        {
+            if (StateHandler.State == State.None)
+                return false;
+            else
+            {
+                StateHandler.Update();
+                return true;
+            }
         }
 
         /// <summary>
@@ -455,6 +477,22 @@ namespace Barebones
             ShowStatus();
             _oldKeyboardState = _newKeyboardState;
             _oldMouseState = _newMouseState;
+        }
+
+        /// <summary>
+        /// Executes engine draw calls to be executed instead of a games. I.E. The built in script editors.
+        /// </summary>
+        /// <remarks>Place game draw logic in a negated if statement for this function.</remarks>
+        /// <returns>True if we are overriding other draw logic, false otherwise.</returns>
+        public static bool OverrideDraw()
+        {
+            if (StateHandler.State == State.None)
+                return false;
+            else
+            {
+                StateHandler.Draw();
+                return true;
+            }
         }
 
         /// <summary>
@@ -563,6 +601,11 @@ namespace Barebones
                                         _defaultUDPHostPort = 51234;
                                 break;
                         }
+                        case "bareboneseditor":
+                            {
+                                _isEditor = true;
+                                break;
+                            }
                     }
                 }
             }

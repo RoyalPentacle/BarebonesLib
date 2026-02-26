@@ -37,7 +37,9 @@ namespace Barebones.Windows.Controls
         private int _displayButtonStart;
         private int _displayButtonEnd;
 
-       
+        private bool _stretchToFit = false;
+
+        private int _minimumWidth;
 
         /// <summary>
         /// The parent window for this Listbox
@@ -56,6 +58,23 @@ namespace Barebones.Windows.Controls
         }
 
         /// <summary>
+        /// The bounds of the Listbox.
+        /// </summary>
+        public Rectangle Bounds
+        {
+            get { return _bounds; }
+        }
+
+        /// <summary>
+        /// Shoud this Listbox stretch horizontally to fit the width of its contents?
+        /// </summary>
+        public bool StretchToFit
+        {
+            get { return _stretchToFit; }
+            set { _stretchToFit = value; }
+        }
+
+        /// <summary>
         /// Construct a new Listbox with the specified arguments.
         /// </summary>
         /// <param name="name">The name of this Listbox.</param>
@@ -66,41 +85,42 @@ namespace Barebones.Windows.Controls
         {
             _name = name;
             _bounds = bounds;
+            _minimumWidth = _bounds.Width;
             _parent = parent;
             _maxButtonDisplay = maxButtonDisplay;
             _buttons = new List<TextButton>();
             _background = new ComplexSprite(_parent.ScriptPath);
             _background.IgnoreCulling = true;
-            _background.ChangeAnimation("TEXTBUTTONBACKGROUND");
+            _background.ChangeAnimation("LISTBOXBACKGROUND");
             _background.SetScale(new Vector2(_bounds.Size.X / _background.CurrentFrame.Width, _bounds.Size.Y / _background.CurrentFrame.Height));
             _topEdge = new ComplexSprite(_parent.ScriptPath);
             _topEdge.IgnoreCulling = true;
-            _topEdge.ChangeAnimation("TEXTBUTTONTOP");
+            _topEdge.ChangeAnimation("LISTBOXTOP");
             _topEdge.SetScale(new Vector2(_bounds.Size.X / _topEdge.CurrentFrame.Width, 1));
             _rightEdge = new ComplexSprite(_parent.ScriptPath);
             _rightEdge.IgnoreCulling = true;
-            _rightEdge.ChangeAnimation("TEXTBUTTONRIGHT");
+            _rightEdge.ChangeAnimation("LISTBOXRIGHT");
             _rightEdge.SetScale(new Vector2(1, _bounds.Size.Y / _rightEdge.CurrentFrame.Height));
             _bottomEdge = new ComplexSprite(_parent.ScriptPath);
             _bottomEdge.IgnoreCulling = true;
-            _bottomEdge.ChangeAnimation("TEXTBUTTONBOTTOM");
+            _bottomEdge.ChangeAnimation("LISTBOXBOTTOM");
             _bottomEdge.SetScale(new Vector2(_bounds.Size.X / _bottomEdge.CurrentFrame.Width, 1));
             _leftEdge = new ComplexSprite(_parent.ScriptPath);
             _leftEdge.IgnoreCulling = true;
-            _leftEdge.ChangeAnimation("TEXTBUTTONLEFT");
+            _leftEdge.ChangeAnimation("LISTBOXLEFT");
             _leftEdge.SetScale(new Vector2(1, _bounds.Size.Y / _leftEdge.CurrentFrame.Height));
             _topLeftCorner = new ComplexSprite(_parent.ScriptPath);
             _topLeftCorner.IgnoreCulling = true;
-            _topLeftCorner.ChangeAnimation("TEXTBUTTONTOPLEFT");
+            _topLeftCorner.ChangeAnimation("LISTBOXTOPLEFT");
             _topRightCorner = new ComplexSprite(_parent.ScriptPath);
             _topRightCorner.IgnoreCulling = true;
-            _topRightCorner.ChangeAnimation("TEXTBUTTONTOPRIGHT");
+            _topRightCorner.ChangeAnimation("LISTBOXTOPRIGHT");
             _bottomLeftCorner = new ComplexSprite(_parent.ScriptPath);
             _bottomLeftCorner.IgnoreCulling = true;
-            _bottomLeftCorner.ChangeAnimation("TEXTBUTTONBOTTOMLEFT");
+            _bottomLeftCorner.ChangeAnimation("LISTBOXBOTTOMLEFT");
             _bottomRightCorner = new ComplexSprite(_parent.ScriptPath);
             _bottomRightCorner.IgnoreCulling = true;
-            _bottomRightCorner.ChangeAnimation("TEXTBUTTONBOTTOMRIGHT");
+            _bottomRightCorner.ChangeAnimation("LISTBOXBOTTOMRIGHT");
         }
 
         /// <summary>
@@ -117,7 +137,6 @@ namespace Barebones.Windows.Controls
                     return false;
                 }
             }
-            button.Bounds = new Rectangle(_bounds.X, _bounds.Y, _bounds.Width, button.Bounds.Height);
             _buttons.Add(button);
             RecalculateSize();
             SanityCheckDisplay();
@@ -175,14 +194,38 @@ namespace Barebones.Windows.Controls
         }
 
         /// <summary>
+        /// Remove all buttons from this Listbox.
+        /// </summary>
+        public void RemoveAll()
+        {
+            for (int i = _buttons.Count - 1; i >= 0; i--)
+            {
+                _buttons[i].Unload();
+                _buttons.RemoveAt(i);
+            }
+        }
+
+        /// <summary>
         /// Recalculates the height of the Listbox, and the width of all TextButtons to match the width of the Listbox.
         /// </summary>
         public void RecalculateSize()
         {
+            if (_stretchToFit)
+            {
+                int maxWidth = 0;
+                for (int i = 0; i < _buttons.Count; i++)
+                {
+                    if (_buttons[i].Bounds.Width > maxWidth)
+                        maxWidth = _buttons[i].Bounds.Width;
+                }
+                _bounds.Width = Math.Max(maxWidth, _minimumWidth);
+            }
+
             for (int i = 0; i < _buttons.Count; i++)
             {
                 _buttons[i].Bounds = new Rectangle(_bounds.X, _bounds.Y + i * _buttons[i].Bounds.Height, _bounds.Width, _buttons[i].Bounds.Height);
             }
+
             if (_buttons.Count > 0)
             {
                 _bounds.Height = _buttons[0].Bounds.Height * _maxButtonDisplay;
@@ -193,6 +236,7 @@ namespace Barebones.Windows.Controls
                 _leftEdge.SetScale(new Vector2(1, _bounds.Size.Y / _leftEdge.CurrentFrame.Height));
             }
         }
+
 
         /// <summary>
         /// Check inputs for this Listbox.

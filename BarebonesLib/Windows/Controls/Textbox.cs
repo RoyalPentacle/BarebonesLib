@@ -62,6 +62,14 @@ namespace Barebones.Windows.Controls
         }
 
         /// <summary>
+        /// The bounds of this Textbox.
+        /// </summary>
+        public Rectangle Bounds
+        {
+            get { return _bounds; }
+        }
+
+        /// <summary>
         /// The text stored in this Textbox.
         /// </summary>
         /// <remarks>Setter is not very robust, needs reworking.</remarks>
@@ -172,6 +180,19 @@ namespace Barebones.Windows.Controls
             }
         }
        
+        /// <summary>
+        /// Change the size and location of this Textbox.
+        /// </summary>
+        /// <param name="bounds">The new bounds of this Textbox.</param>
+        public void ChangeSize(Rectangle bounds)
+        {
+            _bounds = bounds;
+            _background.SetScale(new Vector2(_bounds.Size.X / _background.CurrentFrame.Width, _bounds.Size.Y / _background.CurrentFrame.Height));
+            _topEdge.SetScale(new Vector2(_bounds.Size.X / _topEdge.CurrentFrame.Width, 1));
+            _rightEdge.SetScale(new Vector2(1, _bounds.Size.Y / _rightEdge.CurrentFrame.Height));
+            _bottomEdge.SetScale(new Vector2(_bounds.Size.X / _bottomEdge.CurrentFrame.Width, 1));
+            _leftEdge.SetScale(new Vector2(1, _bounds.Size.Y / _leftEdge.CurrentFrame.Height));
+        }
 
         /// <summary>
         /// Forcefully activate this textbox.
@@ -205,10 +226,10 @@ namespace Barebones.Windows.Controls
                     }
                 }
             }
-            //else if (c == '\r')
-            //{
-            //    _action.Invoke(this);
-            //} 
+            else if (c == '\r')
+            {
+                _action.Invoke(this);
+            }
             else
             {
                 if (_displayText.StoredText.Length < _maxLength)
@@ -281,7 +302,8 @@ namespace Barebones.Windows.Controls
                 if (Control.LeftClickPressed() && !_bounds.Contains(_parent.LocalMousePosition))
                 {
                     _active = false;
-                    Control.ClearInputDelegate();
+                    if (Control.InputDelegate == ProcessTextInput)
+                        Control.ClearInputDelegate();
                     if (_activateOnFocusLoss)
                     {
                         _action.Invoke(this);

@@ -22,6 +22,11 @@ namespace Barebones.Config
 
         private static Action<char>? _inputDelegate;
 
+        internal static Action<char>? InputDelegate
+        {
+            get { return _inputDelegate; }
+        }
+
         /// <summary>
         /// Set the input delegate to hijack the text input for the window.
         /// </summary>

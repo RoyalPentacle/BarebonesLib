@@ -1,4 +1,5 @@
 ﻿using Barebones.Asset;
+using Barebones.Asset.Scripts;
 using Barebones.Config;
 using Barebones.Drawable;
 using Barebones.Interfaces;
@@ -72,6 +73,8 @@ namespace Barebones.Windows
         private bool _isMinimized = false;
 
         private bool _hasHandle = false;
+        private bool _hasMinimize = true;
+        private bool _hasWindowControls = true;
         private bool _isDragged;
         private bool _wasDragged;
 
@@ -99,6 +102,27 @@ namespace Barebones.Windows
             get { return _bounds.Location; }
             set { _bounds.Location = value; }
         }
+
+        /// <summary>
+        /// Does this Window have window controls? (Close, Minimize)
+        /// </summary>
+        /// <remarks>Only matters if the Window has a handle.</remarks>
+        public bool HasWindowControls
+        {
+            get { return _hasWindowControls; }
+            set { _hasWindowControls = value; }
+        }
+
+        /// <summary>
+        /// Does this Window have minimize?
+        /// </summary>
+        /// <remarks>Only matters if this window both has a handle and is showing the handle controls.</remarks>
+        public bool HasMinimize
+        {
+            get { return _hasMinimize; }
+            set { _hasMinimize = value; }
+        }
+
 
         /// <summary>
         /// Construct a new window with the specified arguments.
@@ -269,12 +293,17 @@ namespace Barebones.Windows
                 _bounds.Location += Control.MouseMovement;
             }
 
-            _minimizeButton?.CheckInput();
-            _closeButton?.CheckInput();
+            if (_hasWindowControls)
+            {
+                if (_hasMinimize)
+                    _minimizeButton?.CheckInput();
+                
+                    _closeButton?.CheckInput();
+            }
 
             if (!_isMinimized && !_isDragged)
             {
-                for (int i = _controls.Count - 1; i >= 0; i--)
+                for (int i = _controls.Count - 1; i >= 0 && _controls.Count != 0; i--)
                 {
                     if (!WindowHandler.DropdownMouseover || _controls[i] is Dropdown)
                         _controls[i].CheckInput();
@@ -351,6 +380,37 @@ namespace Barebones.Windows
                 _bounds.Size = _handle.Size;
             }
 
+        }
+
+        /// <summary>
+        /// Change the size and location of this Window.
+        /// </summary>
+        /// <param name="bounds">The new bounds of this Window.</param>
+        public void ChangeSize(Rectangle bounds)
+        {
+            _bounds = bounds;
+            _maximizedSize = bounds.Size;
+
+            _background.SetScale(new Vector2(Bounds.Size.X / _background.CurrentFrame.Width, Bounds.Size.Y / _background.CurrentFrame.Height));
+            _topEdge.SetScale(new Vector2(Bounds.Size.X / _topEdge.CurrentFrame.Width, 1));
+            _rightEdge.SetScale(new Vector2(1, Bounds.Size.Y / _rightEdge.CurrentFrame.Height));
+            _bottomEdge.SetScale(new Vector2(Bounds.Size.X / _bottomEdge.CurrentFrame.Width, 1));
+            _leftEdge.SetScale(new Vector2(1, Bounds.Size.Y / _leftEdge.CurrentFrame.Height));
+
+
+            if (_hasHandle)
+            {
+                _handle.Width = bounds.Width;
+
+                _closeButton.Bounds = new Rectangle(bounds.Width - 31, 1, 30, 30);
+                _minimizeButton.Bounds = new Rectangle(bounds.Width - 63, 1, 30, 30);
+
+                _handleBackground.SetScale(new Vector2(_handle.Size.X / _handleBackground.CurrentFrame.Width, _handle.Size.Y / _handleBackground.CurrentFrame.Height));
+                _handleTopEdge.SetScale(new Vector2(_handle.Size.X / _handleTopEdge.CurrentFrame.Width, 1));
+                _handleRightEdge.SetScale(new Vector2(1, _handle.Size.Y / _handleRightEdge.CurrentFrame.Height));
+                _handleBottomEdge.SetScale(new Vector2(_handle.Size.X / _handleBottomEdge.CurrentFrame.Width, 1));
+                _handleLeftEdge.SetScale(new Vector2(1, _handle.Size.Y / _handleLeftEdge.CurrentFrame.Height));
+            }
         }
 
         /// <summary>
@@ -441,8 +501,12 @@ namespace Barebones.Windows
                 DrawLocal(_handleTopRightCorner, new Vector2(_handle.Right + _handleTopRightCorner.CurrentFrame.Origin.X, _handle.Top - _handleTopRightCorner.CurrentFrame.Origin.Y));
                 DrawLocal(_handleBottomLeftCorner, new Vector2(_handle.Left - _handleBottomLeftCorner.CurrentFrame.Origin.X, _handle.Bottom + _handleBottomLeftCorner.CurrentFrame.Origin.Y));
                 DrawLocal(_handleBottomRightCorner, new Vector2(_handle.Right + _handleBottomRightCorner.CurrentFrame.Origin.X, _handle.Bottom + _handleBottomRightCorner.CurrentFrame.Origin.Y));
-                _minimizeButton?.Draw();
-                _closeButton?.Draw();
+                if (_hasWindowControls)
+                {
+                    if (_hasMinimize)
+                        _minimizeButton?.Draw();
+                    _closeButton?.Draw();
+                }
                 DrawLocal(_title, new Vector2(12, _handle.Center.Y));
             }
         }
