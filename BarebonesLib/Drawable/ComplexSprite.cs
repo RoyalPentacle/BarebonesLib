@@ -1,4 +1,5 @@
-﻿using Barebones.Asset.Scripts;
+﻿using Barebones.Asset;
+using Barebones.Asset.Scripts;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
@@ -298,6 +299,15 @@ namespace Barebones.Drawable
             get { return _isColourizing; }
         }
 
+
+        private bool _ignoreAnimation = false;
+
+        internal bool IgnoreAnimation
+        {
+            get { return _ignoreAnimation; }
+            set { _ignoreAnimation = value; }
+        }
+
         /// <summary>
         /// The number of palettes available to this sprite.
         /// </summary>
@@ -316,6 +326,43 @@ namespace Barebones.Drawable
         }
 
         /// <summary>
+        /// Construct an empty ComplexSprite.
+        /// </summary>
+        public ComplexSprite()
+        {
+            _colour = Color.White;
+            
+        }
+
+        internal void ChangeTexture(string texturePath)
+        {
+
+            try
+            {
+                Texture2D tex = Textures.GetTexture(texturePath);
+                if (tex != Textures.Shared.FallbackTexture)
+                {
+                    UnloadSprite();
+                    _texture = tex;
+                    _texturePath = texturePath;
+                    if (_currentFrame == null)
+                    {
+                        _currentFrame = new Frame(_texture.Bounds, 1000f, _texture.Bounds.Center.ToVector2());
+                    }
+                    if (_currentAnimation == null)
+                    {
+                        _currentAnimation = new Anim();
+                        _currentAnimation.AddFrame(_currentFrame);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Verbose.WriteErrorMajor($"Failed to load texture: {texturePath} \nEX: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Construct a new sprite from a path to a SpriteScript.
         /// </summary>
         /// <param name="scriptPath">The path to the SpriteScript to load.</param>
@@ -323,6 +370,7 @@ namespace Barebones.Drawable
         {
 
         }
+
 
         /// <summary>
         /// Construct a new sprite from a path to a SpriteScript, with the option to ignore lua scripts.
@@ -420,19 +468,22 @@ namespace Barebones.Drawable
         private void UpdateAnimation()
         {
             _animTimer += Engine.GameTime.ElapsedGameTime.TotalMilliseconds * SpeedMultiplier;
-            if (_animTimer >= _currentFrame.Speed)
+            if (_currentFrame != null)
             {
-                _currentFrameIndex++;
-                if (_currentFrameIndex >= _currentAnimation.Frames.Count)
+                if (_animTimer >= _currentFrame.Speed)
                 {
-                    _currentFrameIndex = 0;
-                    if (_nextAnim != "")
+                    _currentFrameIndex++;
+                    if (_currentFrameIndex >= _currentAnimation.Frames.Count)
                     {
-                        ChangeAnimation(_nextAnim);
-                        return;
+                        _currentFrameIndex = 0;
+                        if (_nextAnim != "")
+                        {
+                            ChangeAnimation(_nextAnim);
+                            return;
+                        }
                     }
+                    ChangeFrame(_currentFrameIndex, false);
                 }
-                ChangeFrame(_currentFrameIndex, false);
             }
         }
         #endregion
@@ -574,12 +625,25 @@ namespace Barebones.Drawable
                 _cullRec.X = (int)position.X - _cullRec.Width / 2;
                 _cullRec.Y = (int)position.Y - _cullRec.Height / 2 ;
                 _lastPosition = position;
-                if (_ignoreCulling || _cullRec.Intersects(Engine.Camera.VisibleArea))
+                if (!_ignoreAnimation)
                 {
-                    if (_colouredTexture == null)
-                        Engine.SpriteBatch.Draw(_texture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
-                    else
-                        Engine.SpriteBatch.Draw(_colouredTexture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
+                    if (_ignoreCulling || _cullRec.Intersects(Engine.Camera.VisibleArea))
+                    {
+                        if (_colouredTexture == null)
+                            Engine.SpriteBatch.Draw(_texture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
+                        else
+                            Engine.SpriteBatch.Draw(_colouredTexture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
+                    }
+                }
+                else if (_ignoreAnimation)
+                {
+                    if (_ignoreCulling || _cullRec.Intersects(Engine.Camera.VisibleArea))
+                    {
+                        if (_colouredTexture == null)
+                            Engine.SpriteBatch.Draw(_texture, position, _texture.Bounds, _colour, _rotation, _texture.Bounds.Center.ToVector2(), _scale.RawVector2, _spriteEffect, _spriteDepth);
+                        else
+                            Engine.SpriteBatch.Draw(_colouredTexture, position, _texture.Bounds, _colour, _rotation, _texture.Bounds.Center.ToVector2(), _scale.RawVector2, _spriteEffect, _spriteDepth);
+                    }
                 }
             }
         }

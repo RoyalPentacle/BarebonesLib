@@ -1,4 +1,6 @@
 ﻿using Barebones.Asset;
+using Barebones.DataStructures;
+using Barebones.Drawable;
 using Barebones.Drawable.Particles;
 using Barebones.Network;
 using Barebones.States;
@@ -16,7 +18,65 @@ namespace Barebones
     /// </summary>
     public static class Engine
     {
+        private static bool _isColourizing = false;
+        private static Color _colourizeDestColour;
 
+        private static Color _backbufferColour;
+
+        /// <summary>
+        /// The colour used for clearing the backbuffer.
+        /// </summary>
+        public static Color BackBufferColour
+        {
+            get { return _backbufferColour; }
+        }
+
+
+        private static ColorF _colourizeCurrentColour;
+        private static ColorF _colourizeChangeOverTime;
+        private static double _colourizeDuration;
+        private static double _colourizeElapsedTime;
+
+        private static void UpdateColour()
+        {
+            if (_isColourizing)
+            {
+                _colourizeCurrentColour += _colourizeChangeOverTime;
+                _colourizeElapsedTime += Engine.GameTime.ElapsedGameTime.TotalMilliseconds;
+                if (_colourizeElapsedTime >= _colourizeDuration)
+                {
+                    _isColourizing = false;
+                    _backbufferColour = _colourizeDestColour;
+                }
+                else
+                    _backbufferColour = _colourizeCurrentColour.GetColour;
+            }
+        }
+
+        /// <summary>
+        /// Sets the colour for clearing the backbuffer.
+        /// </summary>
+        /// <param name="colour">The new colour.</param>
+        public static void SetBackbufferColour(Color colour)
+        {
+            _isColourizing = false;
+            _backbufferColour = colour;
+        }
+
+        /// <summary>
+        /// Change the backbuffer colour to the provided colour, over the provided milliseconds.
+        /// </summary>
+        /// <param name="colour">The colour to change to.</param>
+        /// <param name="milliseconds">The milliseconds over which the change should occur.</param>
+        public static void ColourizeBackbuffer(Color colour, float milliseconds)
+        {
+            _colourizeDestColour = colour;
+            _colourizeDuration = milliseconds;
+            _colourizeElapsedTime = 0;
+            _colourizeCurrentColour = new ColorF(_backbufferColour);
+            _colourizeChangeOverTime = ColorF.GetChangeOverTime(_backbufferColour, colour, milliseconds);
+            _isColourizing = true;
+        }
 
 
         internal const string LOGGING_PATH = "logs/";
@@ -467,6 +527,7 @@ namespace Barebones
         /// </summary>
         public static void PostUpdate()
         {
+            UpdateColour();
             Connections.UpdateNetwork();
             Asset.Sound.DisposeStoppedInstances();
             Music.DisposeStoppedInstances();

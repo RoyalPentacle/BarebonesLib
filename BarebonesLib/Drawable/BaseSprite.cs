@@ -46,9 +46,17 @@ namespace Barebones.Drawable
         }
 
 
+        /// <summary>
+        /// Construct an empty BaseSprite.
+        /// </summary>
+        public BaseSprite()
+        {
+
+        }
+
 
         /// <summary>
-        /// Constructs a new SimpleSprite from the SpriteScript at the provided path.
+        /// Constructs a new BaseSprite from the SpriteScript at the provided path.
         /// Also outputs that SpriteScript to be used by derived constructors.
         /// </summary>
         /// <param name="scriptPath">The path to the SpriteScript to load.</param>

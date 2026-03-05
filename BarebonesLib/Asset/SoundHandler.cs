@@ -150,7 +150,7 @@ namespace Barebones.Asset
             try
             {
                 _mutex.WaitOne();
-                if (_soundDict.TryGetValue(soundPath, out SoundMap sound))
+                if (_soundDict.TryGetValue(soundPath, out SoundMap? sound))
                 {
                     sound.Count++;
                     return sound.Sound;
@@ -229,7 +229,7 @@ namespace Barebones.Asset
         /// <param name="soundPath">The name of the sound.</param>
         private static bool GetSoundFromCache(string soundPath)
         {
-            if (_soundCache.TryGetValue(soundPath, out SoundMap sound))
+            if (_soundCache.TryGetValue(soundPath, out SoundMap? sound))
             {
                 _soundCache.Remove(soundPath);
                 _sortedCache.Remove(soundPath);

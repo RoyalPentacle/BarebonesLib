@@ -249,6 +249,7 @@ namespace Barebones.States
 
         internal static void Draw()
         {
+            Engine.Graphics.GraphicsDevice.Clear(Color.Black);
             WindowHandler.Draw();
         }
     }

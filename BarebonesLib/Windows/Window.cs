@@ -124,6 +124,7 @@ namespace Barebones.Windows
         }
 
 
+
         /// <summary>
         /// Construct a new window with the specified arguments.
         /// </summary>

@@ -72,6 +72,7 @@ namespace Barebones.States
 
         internal static void Draw()
         {
+            Engine.Graphics.GraphicsDevice.Clear(Color.Black);
             Engine.SpriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Engine.Camera.Transform);
             if (_logo != null)
             Engine.SpriteBatch.Draw(_logo, new Vector2(Engine.Graphics.GraphicsDevice.Viewport.Width / 2, Engine.Graphics.GraphicsDevice.Viewport.Height / 4) - _logo.Bounds.Center.ToVector2(), Color.White);

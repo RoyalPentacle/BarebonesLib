@@ -144,6 +144,14 @@ namespace Barebones
         }
 
         /// <summary>
+        /// Forces the camera to recalculate its matrix.
+        /// </summary>
+        public void ForceMatrixRecalc()
+        {
+            UpdateMatrix();
+        }
+
+        /// <summary>
         /// Moves the camera to the specified position.
         /// Unbinds the camera if it is currently bound.
         /// </summary>

@@ -1,4 +1,5 @@
 ﻿using Barebones.Asset.Scripts;
+using Barebones.DataStructures;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -128,90 +129,7 @@ namespace Barebones.Drawable
 
 
         #region Colourize Variables
-        private protected struct ColorF
-        {
-            private float R;
-            private float G;
-            private float B;
-            private float A;
-
-
-            public ColorF(float r, float g, float b, float a)
-            {
-                R = Math.Clamp(r, -255f, 255f);
-                G = Math.Clamp(g, -255f, 255f);
-                B = Math.Clamp(b, -255f, 255f);
-                A = Math.Clamp(a, -255f, 255f);
-            }
-
-            public ColorF(Color color)
-            {
-                R = color.R;
-                G = color.G;
-                B = color.B;
-                A = color.A;
-            }
-
-            public static ColorF GetChangeOverTime(Color startColour, Color destColour, float time)
-            {
-                ColorF overTime = new ColorF();
-                float delta = 1000f / time / 60;
-                overTime.R = (destColour.R - startColour.R) * delta;
-                overTime.G = (destColour.G - startColour.G) * delta;
-                overTime.B = (destColour.B - startColour.B) * delta;
-                overTime.A = (destColour.A - startColour.A) * delta;
-                return overTime;
-            }
-
-            public Color GetColour
-            {
-                get
-                {
-                    return new Color((byte)Math.Abs(R), (byte)Math.Abs(G), (byte)Math.Abs(B), (byte)Math.Abs(A));
-                }
-            }
-
-            public static ColorF operator +(ColorF a, ColorF b)
-            {
-                ColorF result = new ColorF();
-                result.R = Math.Clamp(a.R + b.R, -255f, 255f);
-                result.G = Math.Clamp(a.G + b.G, -255f, 255f);
-                result.B = Math.Clamp(a.B + b.B, -255f, 255f);
-                result.A = Math.Clamp(a.A + b.A, -255f, 255f);
-                return result;
-            }
-
-            public static ColorF operator -(ColorF a, ColorF b)
-            {
-                ColorF result = new ColorF();
-                result.R = Math.Clamp(a.R - b.R, -255f, 255f);
-                result.G = Math.Clamp(a.G - b.G, -255f, 255f);
-                result.B = Math.Clamp(a.B - b.B, -255f, 255f);
-                result.A = Math.Clamp(a.A - b.A, -255f, 255f);
-                return result;
-            }
-
-            public static ColorF operator *(ColorF a, ColorF b)
-            {
-                ColorF result = new ColorF();
-                result.R = Math.Clamp(a.R * b.R, -255f, 255f);
-                result.G = Math.Clamp(a.G * b.G, -255f, 255f);
-                result.B = Math.Clamp(a.B * b.B, -255f, 255f);
-                result.A = Math.Clamp(a.A * b.A, -255f, 255f);
-                return result;
-            }
-            public static ColorF operator /(ColorF a, ColorF b)
-            {
-                ColorF result = new ColorF();
-                result.R = Math.Clamp(a.R / b.R, -255f, 255f);
-                result.G = Math.Clamp(a.G / b.G, -255f, 255f);
-                result.B = Math.Clamp(a.B / b.B, -255f, 255f);
-                result.A = Math.Clamp(a.A / b.A, -255f, 255f);
-                return result;
-            }
-
-        }
-
+        
         private protected bool _isColourizing = false;
         private protected Color _colourizeDestColour;
 
@@ -258,6 +176,14 @@ namespace Barebones.Drawable
         {
             get { return _spriteEffect; }
             set { _spriteEffect = value; }
+        }
+
+        /// <summary>
+        /// Construct an empty SimpleSprite.
+        /// </summary>
+        public SimpleSprite()
+        {
+
         }
 
         /// <summary>

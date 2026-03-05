@@ -31,8 +31,6 @@ namespace Barebones.States
                 State = state;
                 switch (State)
                 {
-                    case State.None:
-                        break;
                     case State.Select:
                         EditorSelect.Init();
                         break;
@@ -61,8 +59,6 @@ namespace Barebones.States
         {
             switch (State)
             {
-                case State.None:
-                    break;
                 case State.Select:
                     EditorSelect.Unload();
                     break;
@@ -88,10 +84,7 @@ namespace Barebones.States
         {
             switch (State)
             {
-                case State.None:
-                    break;
-                case State.Select: // The menu doesn't actually have any update logic, it's done entirely through the window system.
-                    break;
+                // State.Select doesn't actually have any update logic, it's done entirely through the window system.
                 case State.Sprite:
                     SpriteEditor.Update();
                     break;
@@ -101,8 +94,7 @@ namespace Barebones.States
                 case State.Sound:
                     SoundEditor.Update();
                     break;
-                case State.Bundle: // The bundle editor doesn't actually have any update logic, it's done entirely through the window system.
-                    break;
+                // State.Bundle doesn't actually have any update logic, it's done entirely through the window system.
                 case State.Particle:
                     ParticleEditor.Update();
                     break;
@@ -113,8 +105,6 @@ namespace Barebones.States
         {
             switch (State)
             {
-                case State.None:
-                    break;
                 case State.Select:
                     EditorSelect.Draw();
                     break;
