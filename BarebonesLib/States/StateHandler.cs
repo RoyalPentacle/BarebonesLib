@@ -84,7 +84,9 @@ namespace Barebones.States
         {
             switch (State)
             {
-                // State.Select doesn't actually have any update logic, it's done entirely through the window system.
+                case State.Select:
+                    EditorSelect.Update();
+                    break;
                 case State.Sprite:
                     SpriteEditor.Update();
                     break;

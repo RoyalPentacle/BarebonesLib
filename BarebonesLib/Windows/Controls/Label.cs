@@ -63,7 +63,11 @@ namespace Barebones.Windows.Controls
         public string LabelText
         {
             get { return _labelText.OriginalText; }
-            set { _labelText.ChangeText(value); }
+            set 
+            { 
+                _labelText.ChangeText(value);
+                _textOffset = new Vector2(-(_labelText.TextWidth / 2f), 0);
+            }
         }
 
         /// <summary>

@@ -472,6 +472,14 @@ namespace Barebones
         private static bool _isEditor = false;
 
         /// <summary>
+        /// Is the engine forced into editor mode?
+        /// </summary>
+        public static bool IsEditor
+        {
+            get { return _isEditor; }
+        }
+
+        /// <summary>
         /// Initialize the Barebones engine
         /// </summary>
         public static void Initialize()

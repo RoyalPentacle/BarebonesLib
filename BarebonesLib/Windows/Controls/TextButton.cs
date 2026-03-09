@@ -271,5 +271,18 @@ namespace Barebones.Windows.Controls
             base.Draw();
         }
 
+        /// <summary>
+        /// Draw an outline around this TextButton.
+        /// </summary>
+        public void DrawOutline()
+        {
+            Point offset = _parent.Location;
+            Rectangle bounds = _bounds;
+            bounds.Location += offset;
+            Engine.SpriteBatch.Draw(Textures.Shared.Pixel, new Rectangle(bounds.X, bounds.Y, bounds.Width, 2), Color.White);
+            Engine.SpriteBatch.Draw(Textures.Shared.Pixel, new Rectangle(bounds.Right - 2, bounds.Y, 2, bounds.Height), Color.White);
+            Engine.SpriteBatch.Draw(Textures.Shared.Pixel, new Rectangle(bounds.X, bounds.Y, 2, bounds.Height), Color.White);
+            Engine.SpriteBatch.Draw(Textures.Shared.Pixel, new Rectangle(bounds.X, bounds.Bottom - 2, bounds.Width, 2), Color.White);
+        }
     }
 }

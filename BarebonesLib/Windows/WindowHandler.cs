@@ -20,6 +20,7 @@ namespace Barebones.Windows
         internal static readonly List<Dropdown> _dropdowns = new List<Dropdown>();
         private static bool _windowClicked = false;
         private static bool _dropdownMouseOver;
+        private static bool _windowMousedOver = false;
 
         private static Window? _openFileDialog;
         private static Window? _saveFileDialog;
@@ -31,6 +32,11 @@ namespace Barebones.Windows
         internal static bool DropdownMouseover
         {
             get { return _dropdownMouseOver; }
+        }
+
+        internal static bool WindowMousedOver 
+        { 
+            get { return _windowMousedOver; } 
         }
 
         private static Window? _forceActiveWindow;
@@ -127,21 +133,8 @@ namespace Barebones.Windows
 
         internal static void Update()
         {
-            _windowClicked = false;
-            for (int i = 0; i < _windows.Count; i++)
-            {
-                if (_windows[i].Bounds.Contains(Control.MousePosition)) // If the user clicks on a window, take the top most window clicked on and make it the active window.
-                {
-                    _windowClicked = true;
-                    if (Control.LeftClickPressed())
-                    {
-                        Window win = _windows[i];
-                        _windows.Remove(win);
-                        _windows.Insert(0, win);
-                        break;
-                    }
-                }
-            }
+            _windowClicked = false; 
+            _windowMousedOver = false;
             _dropdownMouseOver = false;
             for (int i = 0; i < _dropdowns.Count; i++)
             {
@@ -149,6 +142,24 @@ namespace Barebones.Windows
                 {
                     _dropdownMouseOver = true;
                     break;
+                }
+            }
+
+            if (!_dropdownMouseOver)
+            {
+                for (int i = 0; i < _windows.Count; i++)
+                {
+                    if (_windows[i].Bounds.Contains(Control.MousePosition)) // If the user clicks on a window, take the top most window clicked on and make it the active window.
+                    {
+                        _windowClicked = true;
+                        if (Control.LeftClickPressed())
+                        {
+                            Window win = _windows[i];
+                            _windows.Remove(win);
+                            _windows.Insert(0, win);
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -160,6 +171,13 @@ namespace Barebones.Windows
                     {
                         _windows[i].CheckInput();
                         break;
+                    }
+                }
+                for (int i = 0; i < _windows.Count; i++)
+                {
+                    if (_windows[i].Bounds.Contains(Control.MousePosition))
+                    {
+                        _windowMousedOver = true;
                     }
                 }
             }

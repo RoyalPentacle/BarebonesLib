@@ -49,6 +49,7 @@ namespace Barebones.Drawable
             public Rectangle SourceRec
             {
                 get { return _sourceRec; }
+                set { _sourceRec = value; }
             }
 
             /// <summary>
@@ -58,6 +59,7 @@ namespace Barebones.Drawable
             public int Width
             {
                 get { return _sourceRec.Width; }
+                set { _sourceRec.Width = value; }
             }
 
             /// <summary>
@@ -67,6 +69,47 @@ namespace Barebones.Drawable
             public int Height
             {
                 get { return _sourceRec.Height; }
+                set { _sourceRec.Height = value; }
+            }
+
+            /// <summary>
+            /// The X coordinate of this Frame.
+            /// </summary>
+            [JsonIgnore]
+            public int X
+            {
+                get { return _sourceRec.X; }
+                set { _sourceRec.X = value; }
+            }
+
+            /// <summary>
+            /// The Y coordinate of this Frame.
+            /// </summary>
+            [JsonIgnore]
+            public int Y
+            {
+                get { return _sourceRec.Y; }
+                set { _sourceRec.Y = value; }
+            }
+
+            /// <summary>
+            /// The X coordinate of this Frames origin.
+            /// </summary>
+            [JsonIgnore]
+            public float OriginX
+            {
+                get { return _origin.X; }
+                set { _origin.X = value; } 
+            }
+
+            /// <summary>
+            /// The Y coordinate of this Frames origin.
+            /// </summary>
+            [JsonIgnore]
+            public float OriginY
+            {
+                get { return _origin.Y; }
+                set { _origin.Y = value; }
             }
 
             /// <summary>
@@ -76,6 +119,7 @@ namespace Barebones.Drawable
             public float Speed
             {
                 get { return _speed; }
+                set { _speed = value; }
             }
 
             /// <summary>
@@ -210,7 +254,7 @@ namespace Barebones.Drawable
 
         private Dictionary<string, Anim> _animations;
 
-        private Dictionary<uint, Color>[] _colourPalettes;
+        private List<Dictionary<uint, Color>> _colourPalettes;
 
         private int _currentPalette = -1;
 
@@ -236,6 +280,17 @@ namespace Barebones.Drawable
 
         private bool _ignoreCulling = false;
 
+        private string _defaultAnim;
+
+        /// <summary>
+        /// The default animation for this sprite.
+        /// </summary>
+        public string DefaultAnim
+        {
+            get { return _defaultAnim; }
+            set { _defaultAnim = value; }
+        }
+
         /// <summary>
         /// Always draw the sprite regardless of position relative to the camera.
         /// </summary>
@@ -243,6 +298,15 @@ namespace Barebones.Drawable
         {
             get { return _ignoreCulling; }
             set { _ignoreCulling = value; }
+        }
+
+        /// <summary>
+        /// Should this sprite ignore all lua commands from its animations?
+        /// </summary>
+        public bool IgnoreLua
+        {
+            get { return _ignoreLua; }
+            set { _ignoreLua = value; }
         }
 
         /// <summary>
@@ -259,6 +323,14 @@ namespace Barebones.Drawable
         public Dictionary<string, Anim> Animations
         {
             get { return _animations; }
+        }
+
+        /// <summary>
+        /// The collection of colour palettes for this sprite.
+        /// </summary>
+        public List<Dictionary<uint, Color>> ColourPalettes
+        {
+            get { return _colourPalettes; }
         }
 
         /// <summary>
@@ -300,12 +372,42 @@ namespace Barebones.Drawable
         }
 
 
-        private bool _ignoreAnimation = false;
+        private bool _showFullTexture = false;
 
-        internal bool IgnoreAnimation
+        internal bool ShowFullTexture
         {
-            get { return _ignoreAnimation; }
-            set { _ignoreAnimation = value; }
+            get { return _showFullTexture; }
+            set { _showFullTexture = value; }
+        }
+
+        private bool _pauseAnimation = false;
+        
+        internal bool PauseAnimation
+        {
+            get { return _pauseAnimation; }
+            set { _pauseAnimation = value; }
+        }
+
+        internal int TextureWidth
+        {
+            get 
+            {
+                if (_texture != null)
+                    return _texture.Width;
+                else
+                    return 0;
+            }
+        }
+
+        internal int TextureHeight
+        {
+            get 
+            {
+                if (_texture != null)
+                    return _texture.Height;
+                else
+                    return 0;
+            }
         }
 
         /// <summary>
@@ -319,7 +421,7 @@ namespace Barebones.Drawable
             get 
             { 
                 if (_colourPalettes != null)
-                    return _colourPalettes.Length;
+                    return _colourPalettes.Count;
                 else 
                     return 0;
             }
@@ -331,7 +433,15 @@ namespace Barebones.Drawable
         public ComplexSprite()
         {
             _colour = Color.White;
-            
+            _texturePath = "";
+            if (_animations == null)
+            {
+                _animations = new Dictionary<string, Anim>();
+                Anim anim = new Anim();
+                anim.AddFrame(new Frame(new Rectangle(0, 0, 32, 32), 1000f, new Vector2(16, 16)));
+                _animations.Add("IDLE", anim);
+                _defaultAnim = "IDLE";
+            }
         }
 
         internal void ChangeTexture(string texturePath)
@@ -390,6 +500,7 @@ namespace Barebones.Drawable
                     fallback.AddFrame(new Frame(new Rectangle(0, 0, 32, 32), 1000f, new Vector2(16, 16)));
                 _animations.Add("IDLE", fallback);
             }
+            _defaultAnim = script.DefaultAnim;
             ChangeAnimation(script.DefaultAnim);
             _colour = Color.White;
             _colourPalettes = script.ColourPalettes;
@@ -509,7 +620,7 @@ namespace Barebones.Drawable
                     _colouredTexture?.Dispose();
                     _colouredTexture = null;
                 }
-                else if (_colourPalettes != null && paletteIndex < _colourPalettes.Length)
+                else if (_colourPalettes != null && paletteIndex < _colourPalettes.Count)
                 {
                     if (_texture != null)
                     {
@@ -554,7 +665,7 @@ namespace Barebones.Drawable
             if (_colourPalettes != null)
             {
                 int nextPalette = _currentPalette + 1;
-                if (nextPalette >= _colourPalettes.Length)
+                if (nextPalette >= _colourPalettes.Count)
                     nextPalette = -1;
                 ChangePalette(nextPalette);
             }
@@ -572,7 +683,7 @@ namespace Barebones.Drawable
             {
                 int prevPalette = _currentPalette - 1;
                 if (prevPalette < -1)
-                    prevPalette = _colourPalettes.Length - 1;
+                    prevPalette = _colourPalettes.Count - 1;
                 ChangePalette(prevPalette);
             }
         }
@@ -584,7 +695,8 @@ namespace Barebones.Drawable
         /// </summary>
         public override void Update()
         {
-            UpdateAnimation();
+            if (!_pauseAnimation)
+                UpdateAnimation();
             base.Update();
         }
 
@@ -625,7 +737,7 @@ namespace Barebones.Drawable
                 _cullRec.X = (int)position.X - _cullRec.Width / 2;
                 _cullRec.Y = (int)position.Y - _cullRec.Height / 2 ;
                 _lastPosition = position;
-                if (!_ignoreAnimation)
+                if (!_showFullTexture)
                 {
                     if (_ignoreCulling || _cullRec.Intersects(Engine.Camera.VisibleArea))
                     {
@@ -635,7 +747,7 @@ namespace Barebones.Drawable
                             Engine.SpriteBatch.Draw(_colouredTexture, position, _currentFrame.SourceRec, _colour, _rotation, _currentFrame.Origin, _scale.RawVector2, _spriteEffect, _spriteDepth);
                     }
                 }
-                else if (_ignoreAnimation)
+                else if (_showFullTexture)
                 {
                     if (_ignoreCulling || _cullRec.Intersects(Engine.Camera.VisibleArea))
                     {

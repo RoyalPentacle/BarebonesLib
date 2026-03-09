@@ -87,6 +87,14 @@ namespace Barebones.Config
         }
 
         /// <summary>
+        /// Is a window currently be moused over.
+        /// </summary>
+        public static bool WindowMousedOver 
+        { 
+            get { return WindowHandler.WindowMousedOver; }
+        }
+
+        /// <summary>
         /// Loads the keybinds from the path.
         /// Uses AddOrUpdate logic to overwrite default keybinds.
         /// </summary>
@@ -286,6 +294,16 @@ namespace Barebones.Config
         public static bool RightClickReleased()
         {
             return Engine.OldMouseState.RightButton == ButtonState.Pressed && Engine.NewMouseState.RightButton == ButtonState.Released;
+        }
+
+        /// <summary>
+        /// Checks if the Middle mouse button is being held.
+        /// </summary>
+        /// <remarks> I'd like to replace this with something more modular like how key presses are set up, but they don't make it easy.</remarks>
+        /// <returns>True if the Middle mouse button is being held. False otherwise.</returns>
+        public static bool MiddleClickHeld()
+        {
+            return Engine.NewMouseState.MiddleButton == ButtonState.Pressed;
         }
 
         /// <summary>

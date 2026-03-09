@@ -41,6 +41,20 @@ namespace Barebones.Windows.Controls
 
         private int _minimumWidth;
 
+        private int _selectedIndex = -1;
+
+        private bool _fitMaxVert = true;
+
+        /// <summary>
+        /// Set the selected index of this listbox.
+        /// </summary>
+        /// <remarks>-1 for no selection. This effectively does nothing but highlight the selected item.</remarks>
+        public int SelectedIndex
+        {
+            get { return _selectedIndex; }
+            set { _selectedIndex = value; }
+        }
+
         /// <summary>
         /// The parent window for this Listbox
         /// </summary>
@@ -72,6 +86,15 @@ namespace Barebones.Windows.Controls
         {
             get { return _stretchToFit; }
             set { _stretchToFit = value; }
+        }
+
+        /// <summary>
+        /// Should this Listbox stretch vertically to fit the maximum buttons that can be displayed at once?
+        /// </summary>
+        public bool FitMaxVert
+        {
+            get { return _fitMaxVert; }
+            set { _fitMaxVert = value; }
         }
 
         /// <summary>
@@ -176,6 +199,24 @@ namespace Barebones.Windows.Controls
         }
 
         /// <summary>
+        /// Get a TextButton by index from this Listbox.
+        /// </summary>
+        /// <param name="i">The index of the button.</param>
+        /// <param name="button">The button at that index.</param>
+        /// <returns>True if the button exists, false otherwise.</returns>
+        public bool GetButtonByIndex(int i, out TextButton? button)
+        {
+            if (i >= 0 && i < _buttons.Count)
+            {
+                button = _buttons[i];
+                return true;
+            }
+
+            button = null;
+            return false;
+        }
+
+        /// <summary>
         /// Remove a TextButton by name from this Listbox.
         /// </summary>
         /// <param name="name">The name of the button to remove.</param>
@@ -228,7 +269,8 @@ namespace Barebones.Windows.Controls
 
             if (_buttons.Count > 0)
             {
-                _bounds.Height = _buttons[0].Bounds.Height * _maxButtonDisplay;
+                if (_fitMaxVert)
+                    _bounds.Height = _buttons[0].Bounds.Height * _maxButtonDisplay;
                 _background.SetScale(new Vector2(_bounds.Size.X / _background.CurrentFrame.Width, _bounds.Size.Y / _background.CurrentFrame.Height));
                 _topEdge.SetScale(new Vector2(_bounds.Size.X / _topEdge.CurrentFrame.Width, 1));
                 _rightEdge.SetScale(new Vector2(1, _bounds.Size.Y / _rightEdge.CurrentFrame.Height));
@@ -287,17 +329,20 @@ namespace Barebones.Windows.Controls
             _topRightCorner?.Update();
             _bottomLeftCorner?.Update();
             _bottomRightCorner?.Update();
-            if (Control.ScrollUp())
+            if (_bounds.Contains(_parent.LocalMousePosition))
             {
-                _displayButtonStart--;
-                SanityCheckDisplay();
-            }
-            if (Control.ScrollDown())
-            {
-                if (_displayButtonEnd < _buttons.Count)
+                if (Control.ScrollUp())
                 {
-                    _displayButtonStart++;
+                    _displayButtonStart--;
                     SanityCheckDisplay();
+                }
+                if (Control.ScrollDown())
+                {
+                    if (_displayButtonEnd < _buttons.Count)
+                    {
+                        _displayButtonStart++;
+                        SanityCheckDisplay();
+                    }
                 }
             }
 
@@ -326,8 +371,20 @@ namespace Barebones.Windows.Controls
             for (int i = _displayButtonStart; i < _displayButtonEnd; i++)
             {
                 if (i < _buttons.Count)
+                {
                     _buttons[i].Draw();
+                    if (i == _selectedIndex)
+                    {
+                        _buttons[i].DrawOutline();
+                    }
+                }
             }
+        }
+
+        internal void SelectButton(Button b)
+        {
+            if (b is TextButton tb)
+                _selectedIndex = _buttons.IndexOf(tb);
         }
     }
 }

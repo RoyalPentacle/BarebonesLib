@@ -20,7 +20,7 @@ namespace Barebones.Asset.Scripts
         private string _defaultAnim;
 
         [JsonProperty]
-        private Dictionary<uint, Color>[] _colourPalettes;
+        private List<Dictionary<uint, Color>> _colourPalettes;
 
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Barebones.Asset.Scripts
         /// The array of dictionaries for colour replacements.
         /// </summary>
         [JsonIgnore]
-        public Dictionary<uint, Color>[] ColourPalettes
+        public List<Dictionary<uint, Color>> ColourPalettes
         {
             get { return _colourPalettes; }
         }
@@ -65,6 +65,14 @@ namespace Barebones.Asset.Scripts
         {
             _texturePath = "fallback";
             _defaultAnim = "IDLE";
+        }
+
+        internal SpriteScript(ComplexSprite sprite)
+        {
+            _texturePath = sprite.TexturePath;
+            _defaultAnim = sprite.DefaultAnim;
+            _anims = sprite.Animations;
+            _colourPalettes = sprite.ColourPalettes;
         }
     }
 }

@@ -76,7 +76,11 @@ namespace Barebones.Windows.Controls
         public string Text
         {
             get { return _displayText.StoredText; }
-            set { _displayText.ChangeText(value); }
+            set { 
+
+                _displayText.ChangeText(value); 
+                _cursorIndex = _displayText.OriginalText.Length;
+            }
         }
 
         /// <summary>

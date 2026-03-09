@@ -184,6 +184,8 @@ namespace Barebones.Drawable
         /// <param name="text">The string to display.</param>
         public void ChangeText(string text)
         {
+            if (text == null)
+                text = "";
             if (text != _originalText)
             {
                 string temp = _originalText;
