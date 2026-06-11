@@ -155,7 +155,7 @@ namespace Barebones
         }
 
         /// <summary>
-        /// Checks if the thread that called this function is the main thread or not.
+        /// Checks if the thread that called this property is the main thread or not.
         /// </summary>
         public static bool IsMainThread
         {
@@ -216,12 +216,34 @@ namespace Barebones
 
         /// <summary>
         /// Default: 1,048,576 bytes (1 megabyte)
-        /// Set the maximum script cache seize, in bytes.
+        /// Set the maximum script cache size, in bytes.
         /// </summary>
         /// <param name="maxSize">The maximum size of the cache, in bytes.</param>
         public static void SetScriptCacheMaxSize(long maxSize)
         {
             _scriptCacheMaxSize = maxSize;
+        }
+
+        private static long _meshCacheMaxSize = 67108864L;
+
+
+        /// <summary>
+        /// The maximum size of the mesh cache, in bytes.
+        /// </summary>
+        public static long MeshCacheMaxSize
+        {
+            get { return _meshCacheMaxSize; }
+        }
+
+
+        /// <summary>
+        /// Default: 65,108,864 bytes (64 megabytes)
+        /// Set the maximum mesh cache size, in bytes.
+        /// </summary>
+        /// <param name="maxSize">The maximum size of the cache, in bytes.</param>
+        public static void SetMeshCacheMaxSize(long maxSize)
+        {
+            _meshCacheMaxSize = maxSize;
         }
 
         private static NLua.Lua _luaState;

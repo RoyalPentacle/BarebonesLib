@@ -381,7 +381,7 @@ namespace Barebones.States
 
                 HashSet<char> posIntegerWhitelist = new HashSet<char> {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
                 _animationWindow.RegisterControl(new Label("delayLabel", new Rectangle(60, 450, 100, 28), true, "Delay", "scripts/sprites/ui/font.sdf", 1f, Color.White, _animationWindow));
-                _animationWindow.RegisterControl(new Textbox("delayTextbox", new Rectangle(166, 450, 100, 28), "scripts/sprites/ui/font.sdf", 1f, Color.White, posIntegerWhitelist, true, 6, _animationWindow, NullTextboxDelegate));
+                _animationWindow.RegisterControl(new Textbox("delayTextbox", new Rectangle(166, 450, 128, 28), "scripts/sprites/ui/font.sdf", 1f, Color.White, posIntegerWhitelist, true, 6, _animationWindow, NullTextboxDelegate));
 
                 _animationWindow.RegisterControl(new TextButton("addFrameButton", new Rectangle(4, 484, 68, 28), true, true, "Add", "scripts/sprites/ui/font.sdf", 1f, Color.White, _animationWindow, AddFrame));
                 _animationWindow.RegisterControl(new TextButton("removeFrameButton", new Rectangle(78, 484, 68, 28), true, true, "Del", "scripts/sprites/ui/font.sdf", 1f, Color.White, _animationWindow, RemoveFrame));
@@ -956,7 +956,7 @@ namespace Barebones.States
         internal static void Update()
         {
             _sprite?.Update();
-            if (!Control.WindowMousedOver)
+            if (!Control.WindowClicked)
             {
                 if (Control.ScrollUp())
                 {
