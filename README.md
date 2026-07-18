@@ -1,4 +1,4 @@
-This is a monogame based engine (kind of) written for my own personal use.
+This is a monogame based engine written for my own personal use.
 
 Public so people can see it.
 
